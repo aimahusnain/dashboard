@@ -38,7 +38,6 @@ export default function DashboardAnalysisPage() {
   const [selectedStatus, setSelectedStatus] = useState('all')
 
   const { data: tracker = [], isLoading: trackerLoading } = useSWR('/api/tracker', fetcher)
-  const { data: validations = [] } = useSWR('/api/validations', fetcher)
 
   const labels = {
     en: {
