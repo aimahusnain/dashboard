@@ -248,8 +248,8 @@ export default function DashboardPage() {
                 <SelectContent>
                   <SelectItem value="all">All Brands</SelectItem>
                   {brands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
+                    <SelectItem key={String(brand)} value={String(brand)}>
+                      {String(brand)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -265,8 +265,8 @@ export default function DashboardPage() {
                 <SelectContent>
                   <SelectItem value="all">All Models</SelectItem>
                   {models.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      {model}
+                    <SelectItem key={String(model)} value={String(model)}>
+                      {String(model)}
                     </SelectItem>
                   ))}
                 </SelectContent>

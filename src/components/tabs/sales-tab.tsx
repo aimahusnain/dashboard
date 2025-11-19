@@ -33,7 +33,7 @@ export default function SalesTab() {
       }
       return acc
     }, [])
-    .sort((a, b) => b.revenue - a.revenue)
+    .sort((a: { revenue: number }, b: { revenue: number }) => b.revenue - a.revenue)
     .slice(0, 4)
 
   return (
