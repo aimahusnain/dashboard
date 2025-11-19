@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
   const { data: tracker = [], isLoading: trackerLoading } = useSWR('/api/tracker', fetcher)
 
-  const years = Array.from(new Set(tracker.map((item: any) => item.year?.toString()))).filter(Boolean).sort((a: any, b: any) => b - a)
+  const years = Array.from(new Set(tracker.map((item: any) => item.year?.toString()))).filter((y): y is string => Boolean(y)).sort((a: string, b: string) => parseInt(b) - parseInt(a))
   const brands = Array.from(new Set(tracker.map((item: any) => item.make))).filter(Boolean).sort()
   const models = Array.from(new Set(
     selectedBrand === 'all' 
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
                   {years.map((year) => (
-                    <SelectItem key={year} value={year}>
+                    <SelectItem key={String(year)} value={String(year)}>
                       {year}
                     </SelectItem>
                   ))}
