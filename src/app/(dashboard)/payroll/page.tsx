@@ -160,7 +160,7 @@ export default function PayrollEntriesPage() {
             <CardDescription>View and manage all payroll entries</CardDescription>
           </CardHeader>
           <CardContent>
-            {isFetching ? (
+            {/* {isFetching ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="animate-spin text-primary w-8 h-8" />
               </div>
@@ -171,7 +171,7 @@ export default function PayrollEntriesPage() {
                 onDelete={handleDeleteEntry}
                 isLoading={isLoading}
               />
-            )}
+            )} */}
           </CardContent>
         </Card>
       </div>
