@@ -1,3 +1,15 @@
+
+import React from 'react'
+
+const Payroll = () => {
+  return (
+    <div>Payroll</div>
+  )
+}
+
+export default Payroll
+
+
 // 'use client';
 
 // import { useState } from 'react';
@@ -184,12 +196,3 @@
 //     </div>
 //   );
 // }
-
-
-import React from 'react'
-
-export const page = () => {
-  return (
-    <div>page</div>
-  )
-}
