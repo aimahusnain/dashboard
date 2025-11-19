@@ -10,17 +10,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PayrollDialog } from './ui/payroll-dialog';
+// import { PayrollDialog } from './ui/payroll-dialog';
 import { Trash2 } from 'lucide-react';
 
 interface PayrollTableProps {
   entries: PayrollEntry[];
-  onEdit: (entry: PayrollEntry) => Promise<void>;
+  // onEdit: (entry: PayrollEntry) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   isLoading?: boolean;
 }
 
-export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: PayrollTableProps) {
+export function PayrollTable({ entries,  onDelete, isLoading = false }: PayrollTableProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
