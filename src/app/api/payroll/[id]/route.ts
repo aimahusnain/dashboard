@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// GET single payroll entry
 export async function GET(
   _req: NextRequest,
   { params }: any

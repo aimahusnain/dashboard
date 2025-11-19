@@ -5,9 +5,8 @@ import { LanguageProvider } from '@/hooks/use-language';
 
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: "Système d'inventaire",
+  description: "Système d'inventaire",
   icons: {
     icon: [
       {
