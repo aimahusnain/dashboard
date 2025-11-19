@@ -18,6 +18,17 @@ import { useLanguage } from '@/hooks/use-language'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function ValidationPage() {
+  type TabKeys = 'brand' | 'model' | 'color' | 'year'
+
+const tabs: TabKeys[] = ['brand', 'model', 'color', 'year']
+
+const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
+  en: { brand: 'Brands', model: 'Models', color: 'Colors', year: 'Years' },
+  fr: { brand: 'Marques', model: 'Modèles', color: 'Couleurs', year: 'Années' },
+}
+
+// Ab aap directly type-safe access kar sakte ho
+
   const { language } = useLanguage()
   const [showDialog, setShowDialog] = useState(false)
   const [currentTab, setCurrentTab] = useState('brand')
@@ -59,11 +70,6 @@ export default function ValidationPage() {
 
   const t = labels[language as keyof typeof labels]
 
-  const tabs = ['brand', 'model', 'color', 'year']
-  const tabLabels = {
-    en: { brand: 'Brands', model: 'Models', color: 'Colors', year: 'Years' },
-    fr: { brand: 'Marques', model: 'Modèles', color: 'Couleurs', year: 'Années' }
-  }
 
   const getItemsByType = (type: string) => {
     const items = validations
@@ -125,7 +131,7 @@ export default function ValidationPage() {
           {tabs.map(tab => (
             <Card key={tab} className="bg-card/80 backdrop-blur border-border/50 hover:border-border transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg capitalize">{tabLabels[language as keyof typeof tabLabels][tab as keyof any]}</CardTitle>
+                <CardTitle className="text-lg capitalize">{tabLabels[language as keyof typeof tabLabels][tab as TabKeys]}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {isLoading ? (
@@ -177,13 +183,15 @@ export default function ValidationPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {tabLabels[language as keyof typeof tabLabels][tab as keyof any]}
+                  {tabLabels[language as keyof typeof tabLabels][tab as TabKeys]
+}
                 </button>
               ))}
             </div>
             <div className="space-y-2">
               <Label htmlFor="value" className="text-sm font-medium">
-                {tabLabels[language as keyof typeof tabLabels][currentTab as keyof any]} *
+                {tabLabels[language as keyof typeof tabLabels][currentTab as TabKeys]
+} *
               </Label>
               <Input
                 id="value"

@@ -38,7 +38,7 @@ export async function PUT(
 ) {
   try {
     const { id } = params;
-    const body = await req.json();
+    const body = await _req.json();
 
     const { name, date, numberOfPays, amountPerPay, commissionDue, paymentMade } = body;
 
