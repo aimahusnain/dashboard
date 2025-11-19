@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   _req: NextRequest,
-  { params }: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const entry = await prisma.payrollEntry.findUnique({
       where: { id },
     });
@@ -33,10 +33,10 @@ export async function GET(
 // PUT update payroll entry
 export async function PUT(
   _req: NextRequest,
-  { params }: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await _req.json();
 
     const { name, date, numberOfPays, amountPerPay, commissionDue, paymentMade } = body;
@@ -71,10 +71,10 @@ export async function PUT(
 // DELETE payroll entry
 export async function DELETE(
   _req: NextRequest,
-  { params }: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await prisma.payrollEntry.delete({
       where: { id },
     });
