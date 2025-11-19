@@ -75,7 +75,7 @@ export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: P
                   {formatCurrency(entry.balance)}
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <PayrollDialog entry={entry} onSave={onEdit} isLoading={isLoading} />
+                  {/* <PayrollDialog entry={entry} onSave={onEdit} isLoading={isLoading} /> */}
                   <Button
                     variant="outline"
                     size="sm"

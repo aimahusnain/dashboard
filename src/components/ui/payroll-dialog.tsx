@@ -24,6 +24,7 @@ interface PayrollEntry {
   paymentMade: number;
 }
 
+
 interface PayrollDialogProps {
   entry?: PayrollEntry;
   onSave: (data: PayrollEntry) => Promise<void>;
