@@ -13,14 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+
 import { Badge } from '@/components/ui/badge'
 import { useLanguage } from '@/hooks/use-language'
 
@@ -40,8 +33,7 @@ export default function CommissionPage() {
   const { data: sales = [], isLoading: salesLoading } = useSWR('/api/sales', fetcher)
   const { data: payments = [], isLoading: paymentsLoading, mutate: mutatePayments } = useSWR('/api/payments', fetcher)
   const [isOpen, setIsOpen] = useState(false)
-  const [editingSection, setEditingSection] = useState<string | null>(null)
-  const [newSectionName, setNewSectionName] = useState('')
+  console.log('Payments:', isOpen)
   const [paymentForm, setPaymentForm] = useState({ salesman: '', paymentDate: '', paymentAmount: '', notes: '' })
   const [editingSalesman, setEditingSalesman] = useState<string | null>(null)
 
