@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Inventory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  brand     String
+  model     String
+  color     String?
+  year      Int?
+  price     Float?
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("inventory")
+}
+
+model Salesman {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  commissionRate   Float
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("salesmen")
+}
+
+model Sale {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  brand     String
+  model     String
+  salesman  String
+  salePrice Float
+  saleDate  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sales")
+}
+
+model Commission {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  salesman        String
+  commissionAmount Float
+  saleDate        String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("commissions")
+}
+
+model Payment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  salesman      String
+  paymentDate   String
+  paymentAmount Float
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model Validation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  brand     String?
+  model     String?
+  color     String?
+  year      String?
+  category  String?
+  action    String?
+  status    String?
+  details   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("validations")
+}
+
+model Tracker {
+  id                      String    @id @default(auto()) @map("_id") @db.ObjectId
+  datePurchase            String?
+  action                  String?
+  stockNo                  String?
+  category                String?
+  year                    Int?
+  make                    String?
+  model                   String?
+  mileage                 Float?
+  color                   String?
+  purchasePrice           Float?
+  reconciliation          Float?
+  esthetique              Float?
+  transport               Float?
+  adjustment              Float?
+  costTotal               Float?
+  accessCredit            Float?
+  displayedPrice          Float?
+  potentialProfit         Float?
+  sellStatus              Boolean   @default(false)
+  customerName            String?
+  saleDate                String?
+  paid                    String?
+  arbitration             String?
+  variableGrossProfit     Float?
+  costGP                  Float?
+  prGP                    Float?
+  rebate                  Float?
+  vassCost                Float?
+  prAss                   Float?
+  miscellaneousExpenses   Float?
+  totalProfit             Float?
+  commission              Float?
+  netProfit               Float?
+  salesperson             String?
+  notes                   String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@map("tracker")
+}
+
+
+model PayrollEntry {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  date            DateTime
+  numberOfPays    Int
+  amountPerPay    Float
+  totalPaid       Float
+  commissionDue   Float   @default(0)
+  paymentMade     Float   @default(0)
+  balance         Float   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([name])
+  @@index([date])
+}
