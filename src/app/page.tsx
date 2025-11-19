@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AreaChart, BarChart, LineChart, PieChart, RadarChart, RadialBarChart, ComposedChart } from 'recharts'
-import { Area, Bar, Line, Pie, Radar, RadialBar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PolarAngleAxis, PolarRadiusAxis } from 'recharts'
+import { BarChart, PieChart } from 'recharts'
+import { Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -164,7 +164,7 @@ export default function DashboardPage() {
       acc[model].avgProfit = acc[model].totalProfit / acc[model].count
       return acc
     }, {})
-  ).map(([_, data]: any) => data)
+  ).map(( data: any) => data)
     .sort((a: any, b: any) => b.avgProfit - a.avgProfit)
     .slice(0, 10)
 
@@ -177,7 +177,6 @@ export default function DashboardPage() {
     }
     expensesData[category].value += (item.expenseAmount || 0)
   })
-  const chartExpensesData = Object.values(expensesData)
     .sort((a: any, b: any) => b.value - a.value)
 
   // ============ COST & MILEAGE SECTION (existing) ============

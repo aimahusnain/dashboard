@@ -43,7 +43,7 @@ export default function SalesTab() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <TrendingUp size={16} />
-              Today's Sales
+              Today&apos;s Sales
             </CardTitle>
           </CardHeader>
           <CardContent>

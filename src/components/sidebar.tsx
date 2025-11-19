@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LayoutDashboard, FileText, Users, Package, ShoppingCart, Eye, CheckCircle2, BarChart3, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Package, ShoppingCart, CheckCircle2,  ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from './language-switcher'
 

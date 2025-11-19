@@ -6,12 +6,7 @@ import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguage } from '@/hooks/use-language'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+
 import {
   Table,
   TableBody,
@@ -73,7 +68,7 @@ export default function InventoryPage() {
   const { language } = useLanguage()
   const { data: allTracker = [], isLoading } = useSWR('/api/tracker', fetcher)
   const [showDialog, setShowDialog] = useState(false)
-
+console.log(showDialog)
   const labels = {
     en: {
       title: 'Inventory',

@@ -30,7 +30,6 @@ export default function SummaryPage() {
   const [selectedModel, setSelectedModel] = useState('all')
 
   const { data: tracker = [], isLoading } = useSWR('/api/tracker', fetcher)
-  const { data: validations = [] } = useSWR('/api/validations', fetcher)
 
   const labels = {
     en: {

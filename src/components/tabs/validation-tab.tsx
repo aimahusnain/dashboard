@@ -7,7 +7,7 @@ import { CheckCircle, Loader2 } from 'lucide-react'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function ValidationTab() {
-  const { data: validations = [], isLoading, error } = useSWR('/api/validations', fetcher)
+  const { data: validations = [], isLoading } = useSWR('/api/validations', fetcher)
 
   const defaultValidations = [
     { item: 'Email Validation', status: 'Passed', count: 2345 },

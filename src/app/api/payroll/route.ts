@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // GET all payroll entries
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const entries = await prisma.payrollEntry.findMany({
       orderBy: { date: 'desc' },

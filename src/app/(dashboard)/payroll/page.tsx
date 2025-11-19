@@ -7,7 +7,6 @@ import { PayrollDialog } from '@/components/ui/payroll-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, Users, Loader2 } from 'lucide-react';
 import useSWR from 'swr';
-import { Button } from '@/components/ui/button';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -46,7 +45,7 @@ export default function PayrollEntriesPage() {
         mutate();
         showNotification('Entry added successfully!');
       }
-    } catch (error) {
+    } catch  {
       showNotification('Error adding entry');
     } finally {
       setIsLoading(false);
@@ -67,7 +66,7 @@ export default function PayrollEntriesPage() {
         mutate();
         showNotification('Entry updated successfully!');
       }
-    } catch (error) {
+    } catch  {
       showNotification('Error updating entry');
     } finally {
       setIsLoading(false);
@@ -86,7 +85,7 @@ export default function PayrollEntriesPage() {
         mutate();
         showNotification('Entry deleted successfully!');
       }
-    } catch (error) {
+    } catch  {
       showNotification('Error deleting entry');
     } finally {
       setIsLoading(false);

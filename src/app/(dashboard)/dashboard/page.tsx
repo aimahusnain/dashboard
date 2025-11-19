@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import useSWR from 'swr'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -13,7 +12,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -27,7 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useLanguage } from '@/hooks/use-language'
-import Sidebar from '@/components/sidebar'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
