@@ -1,13 +1,13 @@
 // app/api/ledger/route.ts
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const salesman = searchParams.get('salesman')
+    const salesman = searchParams.get("salesman")
 
     // Fetch all salesmen for commission rates
     const salesmen = await prisma.salesman.findMany({
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
         commission: true,
       },
       orderBy: {
-        saleDate: 'desc',
+        saleDate: "desc",
       },
     }
 
@@ -53,18 +53,37 @@ export async function GET(request: Request) {
         paymentAmount: true,
       },
       orderBy: {
-        paymentDate: 'desc',
+        paymentDate: "desc",
+      },
+    })
+
+    const payrollEntries = await prisma.payrollEntry.findMany({
+      select: {
+        name: true,
+        date: true,
+        paymentMade: true,
       },
     })
 
     // Create a map of commission rates
-    const commissionRateMap = new Map(
-      salesmen.map(s => [s.name, s.commissionRate])
-    )
+    const commissionRateMap = new Map(salesmen.map((s) => [s.name, s.commissionRate]))
+
+    const payrollMap = new Map<string, number>()
+    payrollEntries.forEach((entry) => {
+      if (entry.date && entry.name) {
+        const dateKey = new Date(entry.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+        const key = `${entry.name}|${dateKey}`
+        payrollMap.set(key, entry.paymentMade || 0)
+      }
+    })
 
     // Transform tracker data to ledger entries
-    const ledgerEntries = trackerData.map(entry => {
-      const rate = commissionRateMap.get(entry.salesperson || '') || 0
+    const ledgerEntries = trackerData.map((entry) => {
+      const rate = commissionRateMap.get(entry.salesperson || "") || 0
       const normalizedRate = rate > 1 ? rate / 100 : rate
       const profit = entry.totalProfit || 0
       const commissionDue = profit * normalizedRate
@@ -74,19 +93,19 @@ export async function GET(request: Request) {
         date: entry.saleDate,
         profitTotal: profit,
         commissionDue: commissionDue,
-        paymentMade: 0, // Will be calculated from payments
-        type: 'sale' as const,
+        paymentMade: 0, // Will be calculated from payments or payroll
+        type: "sale" as const,
       }
     })
 
     // Add payment entries
-    const paymentEntries = payments.map(payment => ({
+    const paymentEntries = payments.map((payment) => ({
       name: payment.salesman,
       date: payment.paymentDate,
       profitTotal: 0,
       commissionDue: 0,
       paymentMade: payment.paymentAmount,
-      type: 'payment' as const,
+      type: "payment" as const,
     }))
 
     // Combine and sort all entries by date
@@ -98,11 +117,27 @@ export async function GET(request: Request) {
 
     // Calculate running balance for each salesman
     const balanceMap = new Map<string, number>()
-    
-    const enrichedEntries = allEntries.map(entry => {
-      const currentBalance = balanceMap.get(entry.name || '') || 0
+
+    const enrichedEntries = allEntries.map((entry) => {
+      const currentBalance = balanceMap.get(entry.name || "") || 0
+
+      // Check if there's a payroll entry for this date and salesman
+      if (entry.date && entry.name) {
+        const dateKey = new Date(entry.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+        const lookupKey = `${entry.name}|${dateKey}`
+        const payrollPayment = payrollMap.get(lookupKey)
+
+        if (payrollPayment !== undefined && payrollPayment > 0) {
+          entry.paymentMade = payrollPayment
+        }
+      }
+
       const newBalance = currentBalance + (entry.commissionDue || 0) - (entry.paymentMade || 0)
-      balanceMap.set(entry.name || '', newBalance)
+      balanceMap.set(entry.name || "", newBalance)
 
       return {
         ...entry,
@@ -118,13 +153,13 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
-    console.error('Ledger API Error:', error)
+    console.error("Ledger API Error:", error)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch ledger data',
+        error: "Failed to fetch ledger data",
       },
-      { status: 500 }
+      { status: 500 },
     )
   } finally {
     await prisma.$disconnect()
