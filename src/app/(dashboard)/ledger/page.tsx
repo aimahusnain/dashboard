@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/hooks/use-language"
+import React from "react"
 
 interface Salesman {
   id: string
@@ -185,35 +186,61 @@ export default function LedgerPage() {
             ) : (
               <div>
                 <div className="w-full overflow-x-auto border rounded-lg">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-card z-20">
-                      <TableRow>
-                        <TableHead className="py-2 px-3">{t.date}</TableHead>
-                        <TableHead className="py-2 px-3 text-right">{t.commissionDue}</TableHead>
-                        <TableHead className="py-2 px-3 text-right">{t.payment}</TableHead>
-                        <TableHead className="py-2 px-3 text-right">{t.balance}</TableHead>
-                      </TableRow>
-                    </TableHeader>
+               <Table>
+  <TableHeader className="sticky top-0 bg-card z-20">
+    <TableRow>
+      <TableHead className="py-2 px-3">{t.date}</TableHead>
+      <TableHead className="py-2 px-3 text-right">{t.commissionDue}</TableHead>
+      <TableHead className="py-2 px-3 text-right">{t.payment}</TableHead>
+      <TableHead className="py-2 px-3 text-right">{t.balance}</TableHead>
+    </TableRow>
+  </TableHeader>
 
-                    <TableBody>
-                      {paginatedData.map((entry, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell className="text-xs py-2 px-3">
-                            {formatDate(entry.date)}
-                          </TableCell>
-                          <TableCell className="text-xs py-2 px-3 text-right">
-                            {formatCurrency(entry.commissionDue || 0)}
-                          </TableCell>
-                          <TableCell className="text-xs py-2 px-3 text-right">
-                            {formatCurrency(entry.paymentMade || 0)}
-                          </TableCell>
-                          <TableCell className="text-xs py-2 px-3 text-right font-medium">
-                            {formatCurrency(entry.balance || 0)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+  <TableBody>
+    {(() => {
+      let runningBalance = 0; // start from 0
+
+      return paginatedData.map((entry, idx) => {
+        // Add commission first
+        runningBalance += entry.commissionDue ?? 0;
+        const balanceAfterCommission = runningBalance;
+
+        // Then subtract payment
+        runningBalance -= entry.paymentMade ?? 0;
+        const balanceAfterPayment = runningBalance;
+
+        return (
+          <React.Fragment key={idx}>
+            {/* Commission row */}
+            <TableRow>
+              <TableCell className="text-xs py-2 px-3">{formatDate(entry.date)}</TableCell>
+              <TableCell className="text-xs py-2 px-3 text-right">
+                {formatCurrency(entry.commissionDue ?? 0)}
+              </TableCell>
+              <TableCell className="text-xs py-2 px-3 text-right"></TableCell>
+              <TableCell className="text-xs py-2 px-3 text-right font-medium">
+                {formatCurrency(balanceAfterCommission)}
+              </TableCell>
+            </TableRow>
+
+            {/* Payment row */}
+            <TableRow>
+              <TableCell className="text-xs py-2 px-3"></TableCell>
+              <TableCell className="text-xs py-2 px-3 text-right"></TableCell>
+              <TableCell className="text-xs py-2 px-3 text-right">
+                {formatCurrency(entry.paymentMade ?? 0)}
+              </TableCell>
+              <TableCell className="text-xs text-red-400 py-2 px-3 text-right font-medium">
+                {formatCurrency(balanceAfterPayment)}
+              </TableCell>
+            </TableRow>
+          </React.Fragment>
+        );
+      });
+    })()}
+  </TableBody>
+</Table>
+
                 </div>
 
                 {totalPages > 1 && (
