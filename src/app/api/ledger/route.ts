@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     })
 
     // Fetch tracker data where sellStatus is true (sold items)
-    let trackerQuery: any = {
+    const trackerQuery: any = {
       where: {
         sellStatus: true,
         salesperson: {
