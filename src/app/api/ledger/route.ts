@@ -4,32 +4,35 @@ const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    const ledgerEntries = await prisma.payrollEntry.findMany({
+    const payrollEntries = await prisma.payrollEntry.findMany({
       orderBy: { date: "desc" },
     })
 
-    const trackerData = await prisma.tracker.findMany()
+    const salesmen = await prisma.salesman.findMany()
 
-    // Create a map of salesperson to total commission from tracker
-    const commissionMap = new Map<string, number>()
-    for (const tracker of trackerData) {
-      if (tracker.salesperson && tracker.commission) {
-        const current = commissionMap.get(tracker.salesperson) || 0
-        commissionMap.set(tracker.salesperson, current + tracker.commission)
-      }
+    // Create a map of salesman name to commission rate
+    const commissionRateMap = new Map<string, number>()
+    for (const salesman of salesmen) {
+      // Normalize rate: treat > 1 as percentage (e.g., 25 => 0.25)
+      const rate = salesman.commissionRate > 1 ? salesman.commissionRate / 100 : salesman.commissionRate
+      commissionRateMap.set(salesman.name, rate)
     }
 
-    const ledger = ledgerEntries.map((entry) => {
-      const commissionDue = commissionMap.get(entry.name) || 0
-      const paymentMade = entry.paymentMade || 0
-      const balance = commissionDue - paymentMade
+    const ledger = payrollEntries.map((entry) => {
+      const totalPaid = Number(entry.totalPaid) || 0
+      const rate = commissionRateMap.get(entry.name) || 0
+      const commissionEarned = totalPaid * rate
+      const paymentMade = Number(entry.paymentMade) || 0
+      const commissionDue = commissionEarned - paymentMade
 
       return {
         date: entry.date,
         name: entry.name,
+        totalPaid,
         commissionDue,
         paymentMade,
-        balance,
+        balance: commissionDue,
+        salesman: entry.name,
       }
     })
 

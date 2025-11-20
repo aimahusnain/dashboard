@@ -13,6 +13,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export default function LedgerPage() {
   const { language } = useLanguage()
   const { data: ledgerData = [], isLoading } = useSWR("/api/ledger", fetcher)
+  const { data: salesmen = [] } = useSWR("/api/salesmen", fetcher)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedSalesman, setSelectedSalesman] = useState<string>("")
   const itemsPerPage = 10
@@ -50,10 +51,43 @@ export default function LedgerPage() {
 
   const t = labels[language as keyof typeof labels]
 
-  const uniqueSalesmen = Array.from(new Set(ledgerData.map((entry: any) => entry.name))).sort()
+  // Helpers to normalize commission rate (support both 0.05 and 5 formats)
+  const normalizeRate = (rate: number) => {
+    if (!isFinite(rate)) return 0
+    return rate > 1 ? rate / 100 : rate // treat >1 as percentage (e.g. 5 => 0.05)
+  }
+
+  const getCommissionRateForEntry = (entry: any) => {
+    // Prefer a commissionRate on the ledger entry
+    if (entry?.commissionRate != null) return normalizeRate(Number(entry.commissionRate))
+
+    // Try to lookup salesman by name or id
+    const name = entry?.name || entry?.salesmanName || ""
+    const found = salesmen.find((s: any) => s.name === name || s._id === name)
+    if (found && found.commissionRate != null) return normalizeRate(Number(found.commissionRate))
+
+    // fallback default rate
+    return 0
+  }
+
+  // This matches the calculation in the tracker page where commission = totalProfit * (commissionRate / 100)
+  const enrichedData = (ledgerData || []).map((entry: any) => {
+    const profit = Number(entry?.profitTotal ?? entry?.profit ?? 0)
+    const rate = getCommissionRateForEntry(entry)
+    const commissionDue = profit * rate // Same formula as tracker page
+    const paymentMade = entry.paymentMade || 0
+    const balance = commissionDue - paymentMade
+    return {
+      ...entry,
+      commissionDue,
+      paymentMade,
+      balance,
+    }
+  })
+
   const filteredData = selectedSalesman
-    ? ledgerData.filter((entry: any) => entry.name === selectedSalesman)
-    : ledgerData
+    ? enrichedData.filter((entry: any) => entry.name === selectedSalesman)
+    : enrichedData
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const startIdx = (currentPage - 1) * itemsPerPage
@@ -107,9 +141,9 @@ export default function LedgerPage() {
                   className="px-3 py-1 text-sm border rounded-md border-border bg-background text-foreground"
                 >
                   <option value="">{t.allSalesmen}</option>
-                  {uniqueSalesmen.map((salesman: any) => (
-                    <option key={salesman} value={salesman}>
-                      {salesman}
+                  {salesmen.map((salesman: any) => (
+                    <option key={salesman._id} value={salesman.name}>
+                      {salesman.name}
                     </option>
                   ))}
                 </select>
@@ -121,7 +155,7 @@ export default function LedgerPage() {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="animate-spin text-primary" />
               </div>
-            ) : ledgerData.length === 0 ? (
+            ) : enrichedData.length === 0 ? (
               <p className="text-muted-foreground text-sm">{t.noRecords}</p>
             ) : (
               <div>
