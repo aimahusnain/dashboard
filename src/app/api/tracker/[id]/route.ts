@@ -1,32 +1,26 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma"
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const tracker = await prisma.tracker.findUnique({
       where: { id },
     })
     if (!tracker) {
-      return Response.json({ error: 'Tracker entry not found' }, { status: 404 })
+      return Response.json({ error: "Tracker entry not found" }, { status: 404 })
     }
     return Response.json(tracker)
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to fetch tracker entry' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to fetch tracker entry" }, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const body = await request.json()
-    
+
     const updatedTracker = await prisma.tracker.update({
       where: { id },
       data: {
@@ -34,57 +28,60 @@ export async function PUT(
         action: body.action,
         stockNo: body.stockNo,
         category: body.category,
-        year: body.year ? parseInt(body.year) : undefined,
+        year: body.year ? Number.parseInt(body.year) : undefined,
         make: body.make,
         model: body.model,
-        mileage: body.mileage ? parseFloat(body.mileage) : undefined,
+        mileage: body.mileage ? Number.parseFloat(body.mileage) : undefined,
         color: body.color,
-        purchasePrice: body.purchasePrice ? parseFloat(body.purchasePrice) : undefined,
-        reconciliation: body.reconciliation ? parseFloat(body.reconciliation) : undefined,
-        transport: body.transport ? parseFloat(body.transport) : undefined,
-        adjustment: body.adjustment ? parseFloat(body.adjustment) : undefined,
-        costTotal: body.costTotal ? parseFloat(body.costTotal) : undefined,
-        accessCredit: body.accessCredit ? parseFloat(body.accessCredit) : undefined,
-        displayedPrice: body.displayedPrice ? parseFloat(body.displayedPrice) : undefined,
-        potentialProfit: body.potentialProfit ? parseFloat(body.potentialProfit) : undefined,
+        purchasePrice: body.purchasePrice ? Number.parseFloat(body.purchasePrice) : undefined,
+        reconciliation: body.reconciliation ? Number.parseFloat(body.reconciliation) : undefined,
+        transport: body.transport ? Number.parseFloat(body.transport) : undefined,
+        adjustment: body.adjustment ? Number.parseFloat(body.adjustment) : undefined,
+        costTotal: body.costTotal ? Number.parseFloat(body.costTotal) : undefined,
+        accessCredit: body.accessCredit ? Number.parseFloat(body.accessCredit) : undefined,
+        displayedPrice: body.displayedPrice ? Number.parseFloat(body.displayedPrice) : undefined,
+        potentialProfit: body.potentialProfit ? Number.parseFloat(body.potentialProfit) : undefined,
         sellStatus: body.sellStatus || false,
         customerName: body.customerName,
         saleDate: body.saleDate,
         paid: body.paid || false,
         arbitration: body.arbitration,
-        variableGrossProfit: body.variableGrossProfit ? parseFloat(body.variableGrossProfit) : undefined,
-        costGP: body.costGP ? parseFloat(body.costGP) : undefined,
-        prGP: body.prGP ? parseFloat(body.prGP) : undefined,
-        rebate: body.rebate ? parseFloat(body.rebate) : undefined,
-        vassCost: body.vassCost ? parseFloat(body.vassCost) : undefined,
-        prAss: body.prAss ? parseFloat(body.prAss) : undefined,
-        miscellaneousExpenses: body.miscellaneousExpenses ? parseFloat(body.miscellaneousExpenses) : undefined,
-        totalProfit: body.totalProfit ? parseFloat(body.totalProfit) : undefined,
-        commission: body.commission ? parseFloat(body.commission) : undefined,
-        netProfit: body.netProfit ? parseFloat(body.netProfit) : undefined,
+        variableGrossProfit: body.variableGrossProfit ? Number.parseFloat(body.variableGrossProfit) : undefined,
+        costGP: body.costGP ? Number.parseFloat(body.costGP) : undefined,
+        prGP: body.prGP ? Number.parseFloat(body.prGP) : undefined,
+        rebate: body.rebate ? Number.parseFloat(body.rebate) : undefined,
+        vassCost: body.vassCost ? Number.parseFloat(body.vassCost) : undefined,
+        prAss: body.prAss ? Number.parseFloat(body.prAss) : undefined,
+        miscellaneousExpenses: body.miscellaneousExpenses ? Number.parseFloat(body.miscellaneousExpenses) : undefined,
+        totalProfit: body.totalProfit ? Number.parseFloat(body.totalProfit) : undefined,
+        commission: body.commission ? Number.parseFloat(body.commission) : undefined,
+        netProfit: body.netProfit ? Number.parseFloat(body.netProfit) : undefined,
         salesperson: body.salesperson,
         notes: body.notes,
       },
     })
     return Response.json(updatedTracker)
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to update tracker entry' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to update tracker entry" }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+
+    if (id === "delete-all") {
+      await prisma.tracker.deleteMany({})
+      return Response.json({ success: true, message: "All tracker entries deleted successfully" })
+    }
+
     await prisma.tracker.delete({
       where: { id },
     })
     return Response.json({ success: true })
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to delete tracker entry' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to delete tracker entry" }, { status: 500 })
   }
 }

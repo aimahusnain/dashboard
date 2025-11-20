@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import Sidebar from '@/components/sidebar';
-import { LanguageProvider } from '@/hooks/use-language';
-
+import type React from "react"
+import type { Metadata } from "next"
+import "./globals.css"
+import Sidebar from "@/components/sidebar"
+import { LanguageProvider } from "@/hooks/use-language"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
   title: "Système d'inventaire",
@@ -10,19 +11,19 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
       },
       {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
       },
       {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: "/icon.svg",
+        type: "image/svg+xml",
       },
     ],
-    apple: '/apple-icon.png',
+    apple: "/apple-icon.png",
   },
 }
 
@@ -32,16 +33,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <LanguageProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <LanguageProvider>
             <div className="flex h-screen bg-background">
               <Sidebar />
-              <main className="flex-1 overflow-auto">
-                {children}
-              </main>
+              <main className="flex-1 overflow-auto">{children}</main>
             </div>
-        </LanguageProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

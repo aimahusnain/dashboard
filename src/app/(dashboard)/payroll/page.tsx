@@ -1,110 +1,109 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { PayrollEntry } from '@/types/payroll';
-import { PayrollTable } from '@/components/payroll-table';
-import { PayrollDialog } from '@/components/ui/payroll-dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingUp, Users, Loader2 } from 'lucide-react';
-import useSWR from 'swr';
+import { useState } from "react"
+import type { PayrollEntry } from "@/types/payroll"
+import { PayrollTable } from "@/components/payroll-table"
+import { PayrollDialog } from "@/components/ui/payroll-dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DollarSign, Users, Loader2 } from "lucide-react"
+import useSWR from "swr"
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function PayrollEntriesPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const { data: entries = [], mutate, isLoading: isFetching } = useSWR<PayrollEntry[]>('/api/payroll', fetcher);
+  const [isLoading, setIsLoading] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
+  const { data: entries = [], mutate, isLoading: isFetching } = useSWR<PayrollEntry[]>("/api/payroll", fetcher)
 
   const showNotification = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
+    setToastMessage(message)
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 3000)
+  }
 
   const calculateTotals = () => {
     return {
       totalPaid: entries.reduce((sum, e) => sum + e.totalPaid, 0),
-      totalCommission: entries.reduce((sum, e) => sum + e.commissionDue, 0),
       totalBalance: entries.reduce((sum, e) => sum + e.balance, 0),
-    };
-  };
+    }
+  }
 
-  const totals = calculateTotals();
+  const totals = calculateTotals()
 
   const handleAddEntry = async (data: any) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const response = await fetch('/api/payroll', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/payroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      });
+      })
 
       if (response.ok) {
-        mutate();
-        showNotification('Entry added successfully!');
+        mutate()
+        showNotification("Entry added successfully!")
       }
-    } catch  {
-      showNotification('Error adding entry');
+    } catch {
+      showNotification("Error adding entry")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleEditEntry = async (data: any) => {
-    if (!data.id) return;
-    setIsLoading(true);
+    if (!data.id) return
+    setIsLoading(true)
     try {
       const response = await fetch(`/api/payroll/${data.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      });
+      })
 
       if (response.ok) {
-        mutate();
-        showNotification('Entry updated successfully!');
+        mutate()
+        showNotification("Entry updated successfully!")
       }
-    } catch  {
-      showNotification('Error updating entry');
+    } catch {
+      showNotification("Error updating entry")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleDeleteEntry = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this entry?')) return;
-    setIsLoading(true);
+    if (!confirm("Are you sure you want to delete this entry?")) return
+    setIsLoading(true)
     try {
       const response = await fetch(`/api/payroll/${id}`, {
-        method: 'DELETE',
-      });
+        method: "DELETE",
+      })
 
       if (response.ok) {
-        mutate();
-        showNotification('Entry deleted successfully!');
+        mutate()
+        showNotification("Entry deleted successfully!")
       }
-    } catch  {
-      showNotification('Error deleting entry');
+    } catch {
+      showNotification("Error deleting entry")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value)
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b border-border/40 bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:backdrop-blur-lg">
-        <div className="px-8 py-6 flex justify-between items-center">
+        <div className="px-4 md:px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-2">
-            <h2 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
               Payroll Entries
             </h2>
             <p className="text-muted-foreground text-sm">Manage and track employee payroll records</p>
@@ -114,9 +113,9 @@ export default function PayrollEntriesPage() {
         </div>
       </header>
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border/80 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Paid</CardTitle>
@@ -130,22 +129,11 @@ export default function PayrollEntriesPage() {
 
           <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border/80 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Commission Due</CardTitle>
-              <TrendingUp className="w-5 h-5 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totals.totalCommission)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Outstanding</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur border-border/50 hover:border-border/80 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Balance</CardTitle>
               <Users className="w-5 h-5 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totals.totalBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <div className={`text-2xl font-bold ${totals.totalBalance < 0 ? "text-red-600" : "text-green-600"}`}>
                 {formatCurrency(totals.totalBalance)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Total balance</p>
@@ -182,5 +170,5 @@ export default function PayrollEntriesPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

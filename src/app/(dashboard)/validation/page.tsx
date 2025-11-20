@@ -1,75 +1,67 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
-import useSWR from 'swr'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { useLanguage } from '@/hooks/use-language'
+import { useState } from "react"
+import { Loader2, Plus, X } from "lucide-react"
+import useSWR from "swr"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useLanguage } from "@/hooks/use-language"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function ValidationPage() {
-  type TabKeys = 'brand' | 'model' | 'color' | 'year'
+  type TabKeys = "brand" | "model" | "color" | "year"
 
-const tabs: TabKeys[] = ['brand', 'model', 'color', 'year']
-
-const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
-  en: { brand: 'Brands', model: 'Models', color: 'Colors', year: 'Years' },
-  fr: { brand: 'Marques', model: 'Modèles', color: 'Couleurs', year: 'Années' },
-}
-
-// Ab aap directly type-safe access kar sakte ho
+  const tabs: TabKeys[] = ["brand", "model", "color", "year"]
 
   const { language } = useLanguage()
   const [showDialog, setShowDialog] = useState(false)
-  const [currentTab, setCurrentTab] = useState('brand')
-  const [inputValue, setInputValue] = useState('')
-  const { data: validations = [], isLoading, mutate } = useSWR('/api/validations', fetcher)
+  const [currentTab, setCurrentTab] = useState("brand")
+  const [inputValue, setInputValue] = useState("")
+  const { data: validations = [], isLoading, mutate } = useSWR("/api/validations", fetcher)
 
   const labels = {
     en: {
-      title: 'Validation',
-      subtitle: 'Manage vehicle data and validations',
-      addBtn: 'Add New',
-      brand: 'Brand',
-      model: 'Model',
-      color: 'Color',
-      year: 'Year',
-      status: 'Status',
-      actions: 'Actions',
-      addNew: 'Add New',
-      enterValue: 'Enter value',
-      add: 'Add',
-      noItems: 'No items yet',
+      title: "Validation",
+      subtitle: "Manage vehicle data and validations",
+      addBtn: "Add New",
+      brand: "Brand",
+      model: "Model",
+      color: "Color",
+      year: "Year",
+      status: "Status",
+      actions: "Actions",
+      addNew: "Add New",
+      enterValue: "Enter value",
+      add: "Add",
+      noItems: "No items yet",
     },
     fr: {
-      title: 'Validation',
-      subtitle: 'Gérer les données et validations des véhicules',
-      addBtn: 'Ajouter',
-      brand: 'Marque',
-      model: 'Modèle',
-      color: 'Couleur',
-      year: 'Année',
-      status: 'Statut',
-      actions: 'Actions',
-      addNew: 'Ajouter nouveau',
-      enterValue: 'Entrez la valeur',
-      add: 'Ajouter',
-      noItems: 'Aucun élément',
-    }
+      title: "Validation",
+      subtitle: "Gérer les données et validations des véhicules",
+      addBtn: "Ajouter",
+      brand: "Marque",
+      model: "Modèle",
+      color: "Couleur",
+      year: "Année",
+      status: "Statut",
+      actions: "Actions",
+      addNew: "Ajouter nouveau",
+      enterValue: "Entrez la valeur",
+      add: "Ajouter",
+      noItems: "Aucun élément",
+    },
+  }
+
+  const tabLabels: Record<string, Record<TabKeys, string>> = {
+    en: { brand: "Brands", model: "Models", color: "Colors", year: "Years" },
+    fr: { brand: "Marques", model: "Modèles", color: "Couleurs", year: "Années" },
   }
 
   const t = labels[language as keyof typeof labels]
-
 
   const getItemsByType = (type: string) => {
     const items = validations
@@ -81,17 +73,17 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
 
   const handleAddItem = async () => {
     if (!inputValue.trim()) return
-    
+
     try {
-      await fetch('/api/validations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/validations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [currentTab]: inputValue }),
       })
       mutate()
-      setInputValue('')
+      setInputValue("")
     } catch (error) {
-      console.error('Error adding item:', error)
+      console.error("Error adding item:", error)
     }
   }
 
@@ -99,26 +91,27 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
     try {
       const validation = validations.find((v: any) => v[type] === item)
       if (validation) {
-        await fetch(`/api/validations/${validation._id}`, { method: 'DELETE' })
+        await fetch(`/api/validations/${validation._id}`, { method: "DELETE" })
         mutate()
       }
     } catch (error) {
-      console.error('Error deleting item:', error)
+      console.error("Error deleting item:", error)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="px-8 py-8 flex justify-between items-center">
+        <div className="px-4 md:px-8 py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{t.title}</h2>
+            <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {t.title}
+            </h2>
             <p className="text-muted-foreground mt-2">{t.subtitle}</p>
           </div>
           <Button
             onClick={() => setShowDialog(true)}
-                       className="gap-2 r from-primary to-accent hover:opacity-90 transition-all shadow-lg"
-
+            className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg whitespace-nowrap"
           >
             <Plus size={20} />
             {t.addBtn}
@@ -126,12 +119,14 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
         </div>
       </header>
 
-      <div className="p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {tabs.map(tab => (
+      <div className="p-4 md:p-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {tabs.map((tab) => (
             <Card key={tab} className="bg-card/80 backdrop-blur border-border/50 hover:border-border transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg capitalize">{tabLabels[language as keyof typeof tabLabels][tab as TabKeys]}</CardTitle>
+                <CardTitle className="text-lg capitalize">
+                  {tabLabels[language as keyof typeof tabLabels][tab as TabKeys]}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {isLoading ? (
@@ -143,13 +138,16 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {getItemsByType(tab).map((item: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 bg-muted/50 p-2 rounded-lg hover:bg-muted transition-colors">
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 bg-muted/50 p-2 rounded-lg hover:bg-muted transition-colors"
+                      >
                         <span className="text-sm font-medium truncate">{item}</span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteItem(item, tab)}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                         >
                           <X size={14} />
                         </Button>
@@ -169,29 +167,27 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
             <DialogTitle>{t.addNew}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex gap-2 border-b">
-              {tabs.map(tab => (
+            <div className="flex gap-2 border-b overflow-x-auto">
+              {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => {
                     setCurrentTab(tab)
-                    setInputValue('')
+                    setInputValue("")
                   }}
-                  className={`px-4 py-2 capitalize font-medium text-sm transition-colors ${
+                  className={`px-4 py-2 capitalize font-medium text-sm transition-colors whitespace-nowrap ${
                     currentTab === tab
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {tabLabels[language as keyof typeof tabLabels][tab as TabKeys]
-}
+                  {tabLabels[language as keyof typeof tabLabels][tab as TabKeys]}
                 </button>
               ))}
             </div>
             <div className="space-y-2">
               <Label htmlFor="value" className="text-sm font-medium">
-                {tabLabels[language as keyof typeof tabLabels][currentTab as TabKeys]
-} *
+                {tabLabels[language as keyof typeof tabLabels][currentTab as TabKeys]} *
               </Label>
               <Input
                 id="value"
@@ -199,7 +195,7 @@ const tabLabels: Record<keyof typeof labels, Record<TabKeys, string>> = {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleAddItem()
                   }
                 }}
