@@ -81,7 +81,6 @@ export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: P
             <TableHead className="text-right font-semibold">Number of Pays</TableHead>
             <TableHead className="text-right font-semibold">Amount Per Pay</TableHead>
             <TableHead className="text-right font-semibold">Total Paid</TableHead>
-            <TableHead className="text-right font-semibold">Commission Due</TableHead>
             <TableHead className="text-right font-semibold">Payment Made</TableHead>
             <TableHead className="text-right font-semibold">Balance</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -90,7 +89,7 @@ export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: P
         <TableBody>
           {entries.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 No payroll entries found. Create one to get started.
               </TableCell>
             </TableRow>
@@ -102,7 +101,6 @@ export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: P
                 <TableCell className="text-right">{entry.numberOfPays}</TableCell>
                 <TableCell className="text-right">{formatCurrency(entry.amountPerPay)}</TableCell>
                 <TableCell className="text-right font-semibold">{formatCurrency(entry.totalPaid)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(entry.commissionDue)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(entry.paymentMade)}</TableCell>
                 <TableCell className="text-right font-semibold">{formatCurrency(entry.balance)}</TableCell>
                 <TableCell className="text-right space-x-2">
@@ -171,27 +169,15 @@ export function PayrollTable({ entries, onEdit, onDelete, isLoading = false }: P
                 <Label>Total Paid</Label>
                 <Input value={formatCurrency(editingEntry.totalPaid)} disabled className="bg-muted" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="commissionDue">Commission Due</Label>
-                  <Input
-                    id="commissionDue"
-                    type="number"
-                    step="0.01"
-                    value={editingEntry.commissionDue}
-                    onChange={(e) => updateField("commissionDue", Number.parseFloat(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="paymentMade">Payment Made</Label>
-                  <Input
-                    id="paymentMade"
-                    type="number"
-                    step="0.01"
-                    value={editingEntry.paymentMade}
-                    onChange={(e) => updateField("paymentMade", Number.parseFloat(e.target.value) || 0)}
-                  />
-                </div>
+              <div className="grid gap-2">
+                <Label htmlFor="paymentMade">Payment Made</Label>
+                <Input
+                  id="paymentMade"
+                  type="number"
+                  step="0.01"
+                  value={editingEntry.paymentMade}
+                  onChange={(e) => updateField("paymentMade", Number.parseFloat(e.target.value) || 0)}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>Balance</Label>

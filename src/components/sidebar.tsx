@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  BookOpen,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -32,6 +33,7 @@ const getTabs = (language: "en" | "fr") => [
     href: "/salesman-data",
   },
   { id: "payroll", label: language === "en" ? "Payroll Entries" : "Entrées de paie", icon: Users, href: "/payroll" },
+  { id: "ledger", label: language === "en" ? "Ledger" : "Grand Livre", icon: BookOpen, href: "/ledger" },
 ]
 
 export default function Sidebar() {
