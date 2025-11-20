@@ -118,7 +118,7 @@ export async function GET() {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
     await prisma.tracker.deleteMany({})
     return Response.json({ message: "All tracker entries deleted successfully" })
