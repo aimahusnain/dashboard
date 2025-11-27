@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+ experimental: {
+    typedRoutes: false, // ⛔ disables strict route params checking
+  },
 };
 
 export default nextConfig;
