@@ -3,12 +3,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  _req: NextRequest,
-{ params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, context: any) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     const entry = await prisma.payrollEntry.findUnique({
       where: { id },
     });
@@ -30,13 +27,9 @@ export async function GET(
   }
 }
 
-// PUT update payroll entry
-export async function PUT(
-  _req: NextRequest,
-{ params }: { params: { id: string } }
-) {
+export async function PUT(_req: NextRequest, context: any) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await _req.json();
 
     const { name, date, numberOfPays, amountPerPay, commissionDue, paymentMade } = body;
@@ -68,13 +61,9 @@ export async function PUT(
   }
 }
 
-// DELETE payroll entry
-export async function DELETE(
-  _req: NextRequest,
-{ params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, context: any) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     await prisma.payrollEntry.delete({
       where: { id },
     });

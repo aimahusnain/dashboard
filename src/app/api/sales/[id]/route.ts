@@ -1,14 +1,13 @@
 import { prisma } from '@/lib/prisma'
 
-export async function DELETE(
-  _request: Request,
-{ params }: { params: { id: string } }
-) {
+export async function DELETE(_request: Request, context: any) {
   try {
-    const { id } = await params
+    const { id } = await context.params
+
     await prisma.sale.delete({
       where: { id },
     })
+
     return Response.json({ success: true })
   } catch (error) {
     console.error('Database error:', error)
