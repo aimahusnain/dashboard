@@ -542,12 +542,17 @@ export default function TrackerPage() {
                     <SelectValue placeholder={t.allYears} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t.allYears}</SelectItem>
-                    {uniqueYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
+                 <SelectItem value="all">{t.allYears}</SelectItem>
+{uniqueYears.map((year) => {
+  const y = year as string; // cast to string
+  return (
+    <SelectItem key={y} value={y}>
+      {y}
+    </SelectItem>
+  );
+})}
+
+
                   </SelectContent>
                 </Select>
               </div>
@@ -567,11 +572,15 @@ export default function TrackerPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t.allMonths}</SelectItem>
-                      {uniqueMonths.map((month) => (
-                        <SelectItem key={month} value={month}>
-                          {month}
-                        </SelectItem>
-                      ))}
+                   {uniqueMonths.map((month) => {
+  const m = month as string; // cast to string
+  return (
+    <SelectItem key={m} value={m}>
+      {m}
+    </SelectItem>
+  );
+})}
+
                     </SelectContent>
                   </Select>
                 </div>
