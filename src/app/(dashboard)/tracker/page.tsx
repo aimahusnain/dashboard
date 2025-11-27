@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Loader2, Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2, Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,14 +26,16 @@ const COLUMNS = [
   "color",
   "purchasePrice",
   "reconciliation",
-  "ESTHÉTIQUE",
+  "esthetique",
   "transport",
   "adjustment",
   "costTotal",
   "accessCredit",
+  "blackBook",
   "displayedPrice",
   "potentialProfit",
   "sellStatus",
+  "reserve",
   "customerName",
   "saleDate",
   "paid",
@@ -43,6 +45,7 @@ const COLUMNS = [
   "prGP",
   "rebate",
   "vassCost",
+  "cost", // added cost column between vassCost and prAss
   "prAss",
   "miscellaneousExpenses",
   "totalProfit",
@@ -64,14 +67,16 @@ const COLUMN_LABELS = {
   color: "COULEUR",
   purchasePrice: "PRIX ACHAT",
   reconciliation: "RECON",
-  ESTHÉTIQUE: "ESTHÉTIQUE",
+  esthetique: "ESTHÉTIQUE",
   transport: "TRANSPORT",
   adjustment: "AJUSTEMENT",
   costTotal: "COUTANT TOTAL",
   accessCredit: "ACCES CRÉDIT",
+  blackBook: "Black Book",
   displayedPrice: "PRIX AFFICHÉ",
   potentialProfit: "PROFIT POTENTIEL",
-  sellStatus: "STATUT VENDU",
+  sellStatus: "Sell Status",
+  reserve: "Reserve",
   customerName: "Nom du client",
   saleDate: "Date de vente",
   paid: "PAYÉ",
@@ -81,7 +86,8 @@ const COLUMN_LABELS = {
   prGP: "PR GP",
   rebate: "RISTOURNE",
   vassCost: "V ASS",
-  prAss: "PR ASS",
+  cost: "Cost", // added cost column label
+  prAss: "COST PR ASS",
   miscellaneousExpenses: "FRAIS DIVERS",
   totalProfit: "PROFIT TOTAL",
   commission: "Commission",
@@ -89,6 +95,18 @@ const COLUMN_LABELS = {
   salesperson: "Vendeur",
   notes: "Notes",
 }
+
+const TOTALS_COLUMNS = [
+  "purchasePrice",
+  "costTotal",
+  "accessCredit",
+  "reconciliation",
+  "esthetique",
+  "transport",
+  "adjustment",
+  "displayedPrice",
+  "potentialProfit",
+]
 
 function Toast({ message, type = "success" }: { message: string; type?: "success" | "error" }) {
   return (
@@ -117,10 +135,12 @@ export default function TrackerPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [selectAll, setSelectAll] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [dateFilter, setDateFilter] = useState<{ year?: string; month?: string; date?: string }>({})
   const itemsPerPage = 10
   const [formData, setFormData] = useState<Record<string, any>>({
     sellStatus: false,
     paid: 0,
+    reserve: false,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -146,6 +166,11 @@ export default function TrackerPage() {
       deleteSelectedSuccess: "Selected records deleted successfully!",
       deleteError: "Error deleting records",
       selectAll: "Select all on this page",
+      filterByDate: "Filter by Date",
+      allYears: "All Years",
+      allMonths: "All Months",
+      clearFilter: "Clear Filter",
+      totals: "Totals",
     },
     fr: {
       title: "Suivi",
@@ -168,10 +193,40 @@ export default function TrackerPage() {
       deleteSelectedSuccess: "Enregistrements sélectionnés supprimés avec succès!",
       deleteError: "Erreur lors de la suppression des enregistrements",
       selectAll: "Sélectionner tous sur cette page",
+      filterByDate: "Filtrer par date",
+      allYears: "Toutes les années",
+      allMonths: "Tous les mois",
+      clearFilter: "Effacer le filtre",
+      totals: "Totaux",
     },
   }
 
   const t = labels[language as keyof typeof labels]
+
+  const filteredTracker = tracker.filter((entry: any) => {
+    if (!entry.datePurchase) return false
+    const entryDate = new Date(entry.datePurchase)
+    const year = entryDate.getFullYear().toString()
+    const month = String(entryDate.getMonth() + 1).padStart(2, "0")
+    const date = entry.datePurchase
+
+    if (dateFilter.year && year !== dateFilter.year) return false
+    if (dateFilter.month && month !== dateFilter.month) return false
+    if (dateFilter.date && date !== dateFilter.date) return false
+
+    return true
+  })
+
+  const calculateTotals = () => {
+    const totals: Record<string, number> = {}
+    TOTALS_COLUMNS.forEach((col) => {
+      totals[col] = filteredTracker.reduce((sum: number, entry: any) => {
+        const val = Number.parseFloat(entry[col]) || 0
+        return sum + val
+      }, 0)
+    })
+    return totals
+  }
 
   const downloadTemplate = () => {
     const headers = Object.keys(COLUMN_LABELS)
@@ -237,7 +292,9 @@ export default function TrackerPage() {
   }
 
   const getValidationOptions = (field: string) => {
-    return Array.from(new Set(validations.map((v: any) => v[field]).filter(Boolean)))
+    const options = Array.from(new Set(validations.map((v: any) => v[field]).filter(Boolean)))
+    console.log("[v0] getValidationOptions for field:", field, "returned:", options)
+    return options
   }
 
   const handleAddTracker = async () => {
@@ -261,7 +318,7 @@ export default function TrackerPage() {
       setTimeout(() => setShowToast(false), 3000)
 
       mutate()
-      setFormData({ sellStatus: false, paid: 0 })
+      setFormData({ sellStatus: false, paid: 0, reserve: false })
       setShowDialog(false)
       setEditingId(null)
     } catch (error) {
@@ -356,15 +413,35 @@ export default function TrackerPage() {
   }
 
   const resetForm = () => {
-    setFormData({ sellStatus: false, paid: 0 })
+    setFormData({ sellStatus: false, paid: 0, reserve: false })
     setEditingId(null)
     setShowDialog(false)
   }
 
-  const totalPages = Math.ceil(tracker.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredTracker.length / itemsPerPage)
   const startIdx = (currentPage - 1) * itemsPerPage
   const endIdx = startIdx + itemsPerPage
-  const paginatedTracker = tracker.slice(startIdx, endIdx)
+  const paginatedTracker = filteredTracker.slice(startIdx, endIdx)
+  const totals = calculateTotals()
+
+  const uniqueYears = Array.from(
+    new Set(
+      tracker.filter((e: any) => e.datePurchase).map((e: any) => new Date(e.datePurchase).getFullYear().toString()),
+    ),
+  ).sort()
+
+  const uniqueMonths = dateFilter.year
+    ? Array.from(
+        new Set(
+          tracker
+            .filter((e: any) => {
+              if (!e.datePurchase) return false
+              return new Date(e.datePurchase).getFullYear().toString() === dateFilter.year
+            })
+            .map((e: any) => String(new Date(e.datePurchase).getMonth() + 1).padStart(2, "0")),
+        ),
+      ).sort()
+    : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -443,6 +520,93 @@ export default function TrackerPage() {
       </header>
 
       <div className="p-4 md:p-8">
+        <Card className="bg-card/50 backdrop-blur border-border/50 mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar size={20} />
+              {t.filterByDate}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4 items-end">
+              <div>
+                <label className="text-sm font-medium">Year</label>
+                <Select
+                  value={dateFilter.year || "all"}
+                  onValueChange={(val) => {
+                    setDateFilter({ ...dateFilter, year: val || undefined, month: undefined, date: undefined })
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder={t.allYears} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.allYears}</SelectItem>
+                    {uniqueYears.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {dateFilter.year && (
+                <div>
+                  <label className="text-sm font-medium">Month</label>
+                  <Select
+                    value={dateFilter.month || "all"}
+                    onValueChange={(val) => {
+                      setDateFilter({ ...dateFilter, month: val || undefined, date: undefined })
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder={t.allMonths} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t.allMonths}</SelectItem>
+                      {uniqueMonths.map((month) => (
+                        <SelectItem key={month} value={month}>
+                          {month}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {dateFilter.year && dateFilter.month && (
+                <div>
+                  <label className="text-sm font-medium">Date</label>
+                  <Input
+                    type="date"
+                    value={dateFilter.date || ""}
+                    onChange={(e) => {
+                      setDateFilter({ ...dateFilter, date: e.target.value || undefined })
+                      setCurrentPage(1)
+                    }}
+                    className="w-32"
+                  />
+                </div>
+              )}
+
+              {(dateFilter.year || dateFilter.month) && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDateFilter({})
+                    setCurrentPage(1)
+                  }}
+                >
+                  {t.clearFilter}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="bg-card/50 backdrop-blur border-border/50">
           <CardHeader>
             <CardTitle>{t.records}</CardTitle>
@@ -465,6 +629,22 @@ export default function TrackerPage() {
                 <div className="w-full overflow-x-auto border rounded-lg">
                   <Table>
                     <TableHeader className="sticky top-0 bg-card z-20">
+                      <TableRow className="bg-yellow-50 dark:bg-yellow-950 border-b-2">
+                        <TableHead className="w-12 py-2 px-3 font-bold text-yellow-900 dark:text-yellow-100">
+                          {t.totals}
+                        </TableHead>
+                        {COLUMNS.map((col) => (
+                          <TableHead
+                            key={`total-${col}`}
+                            className="whitespace-nowrap py-2 px-3 text-yellow-900 dark:text-yellow-100 font-bold"
+                          >
+                            {TOTALS_COLUMNS.includes(col)
+                              ? `$${totals[col]?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`
+                              : ""}
+                          </TableHead>
+                        ))}
+                        <TableHead className="py-2 px-3"></TableHead>
+                      </TableRow>
                       <TableRow>
                         <TableHead className="w-12 py-2 px-3">
                           <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} aria-label={t.selectAll} />
@@ -491,7 +671,7 @@ export default function TrackerPage() {
                           </TableCell>
                           {COLUMNS.map((col) => (
                             <TableCell key={`${entry.id}-${col}`} className="whitespace-nowrap text-xs py-2 px-3">
-                              {col === "sellStatus" ? (
+                              {col === "sellStatus" || col === "reserve" ? (
                                 <Checkbox checked={entry[col] === true} disabled />
                               ) : col === "totalProfit" || col === "commission" || col === "netProfit" ? (
                                 entry[col] !== null && entry[col] !== undefined ? (
@@ -535,7 +715,8 @@ export default function TrackerPage() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-6">
                     <p className="text-sm text-muted-foreground">
-                      Showing {startIdx + 1}-{Math.min(endIdx, tracker.length)} of {tracker.length} records
+                      Showing {startIdx + 1}-{Math.min(endIdx, filteredTracker.length)} of {filteredTracker.length}{" "}
+                      records
                     </p>
                     <div className="flex gap-2">
                       <Button
@@ -599,18 +780,12 @@ export default function TrackerPage() {
             </div>
             <div>
               <label className="text-sm font-medium">Action</label>
-              <Select value={formData.action || ""} onValueChange={(val) => setFormData({ ...formData, action: val })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select action" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getValidationOptions("action").map((opt: any) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="text"
+                placeholder="Enter action"
+                value={formData.action || ""}
+                onChange={(e) => setFormData({ ...formData, action: e.target.value })}
+              />
             </div>
 
             <div>
@@ -623,7 +798,7 @@ export default function TrackerPage() {
             <div>
               <label className="text-sm font-medium">Category</label>
               <Select
-                value={formData.category || ""}
+                value={formData.category || "default"}
                 onValueChange={(val) => setFormData({ ...formData, category: val })}
               >
                 <SelectTrigger>
@@ -663,25 +838,65 @@ export default function TrackerPage() {
             </div>
             <div>
               <label className="text-sm font-medium">Model</label>
-              <Input
-                value={formData.model || ""}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              />
+              <Select value={formData.model || ""} onValueChange={(val) => setFormData({ ...formData, model: val })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    let models: string[] = []
+                    if (formData.make) {
+                      models = Array.from(
+                        new Set(
+                          validations
+                            .filter((v: any) => v.brand === formData.make || v.make === formData.make)
+                            .map((v: any) => v.model)
+                            .filter(Boolean),
+                        ),
+                      )
+                    } else {
+                      models = Array.from(new Set(validations.map((v: any) => v.model).filter(Boolean)))
+                    }
+                    return models.length > 0 ? (
+                      models.map((model: string) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-models" disabled>
+                        No models available
+                      </SelectItem>
+                    )
+                  })()}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Mileage</label>
+              <label className="text-sm font-medium">Mileage (km)</label>
               <Input
                 type="number"
                 value={formData.mileage || ""}
                 onChange={(e) => setFormData({ ...formData, mileage: e.target.value })}
+                placeholder="e.g., 50000"
               />
             </div>
             <div>
               <label className="text-sm font-medium">Color</label>
-              <Input
-                value={formData.color || ""}
-                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              />
+              <Select value={formData.color || ""} onValueChange={(val) => setFormData({ ...formData, color: val })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Color" />
+                </SelectTrigger>
+                <SelectContent>
+                  {validations
+                    .filter((v: any) => v.brand === formData.make && v.model === formData.model)
+                    .map((v: any) => (
+                      <SelectItem key={v._id} value={v.color || ""}>
+                        {v.color}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm font-medium">Purchase Price</label>
@@ -747,6 +962,15 @@ export default function TrackerPage() {
               />
             </div>
             <div>
+              <label className="text-sm font-medium">Black Book</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.blackBook || ""}
+                onChange={(e) => setFormData({ ...formData, blackBook: e.target.value })}
+              />
+            </div>
+            <div>
               <label className="text-sm font-medium">Displayed Price</label>
               <Input
                 type="number"
@@ -765,6 +989,15 @@ export default function TrackerPage() {
               />
             </div>
             <div>
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Checkbox
+                  checked={formData.reserve || false}
+                  onCheckedChange={(checked) => setFormData({ ...formData, reserve: checked })}
+                />
+                Reserve
+              </label>
+            </div>
+            <div>
               <label className="text-sm font-medium">Customer Name</label>
               <Input
                 value={formData.customerName || ""}
@@ -777,6 +1010,14 @@ export default function TrackerPage() {
                 type="date"
                 value={formData.saleDate || ""}
                 onChange={(e) => setFormData({ ...formData, saleDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Paid</label>
+              <Input
+                type="number"
+                value={formData.paid || ""}
+                onChange={(e) => setFormData({ ...formData, paid: e.target.value })}
               />
             </div>
             <div>
@@ -832,7 +1073,16 @@ export default function TrackerPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">PR ASS</label>
+              <label className="text-sm font-medium">Cost</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.cost || ""}
+                onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">COST PR ASS</label>
               <Input
                 type="number"
                 step="0.01"

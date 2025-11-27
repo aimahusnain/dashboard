@@ -1,517 +1,625 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import useSWR from 'swr'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from "react"
+import useSWR from "swr"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { BarChart, PieChart } from 'recharts'
-import { Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useLanguage } from "@/hooks/use-language"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#14b8a6']
+const COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#06b6d4", "#f43f5e", "#14b8a6"]
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background rounded-lg p-3 shadow-lg border border-gray-200">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }} className="text-sm">
-            {entry.name}: ${entry.value.toLocaleString()}
-          </p>
-        ))}
-      </div>
-    )
+export default function DashboardAnalysisPage() {
+  const { language } = useLanguage()
+  const [selectedYear, setSelectedYear] = useState("all")
+  const [selectedBrand, setSelectedBrand] = useState("all")
+  const [selectedModel, setSelectedModel] = useState("all")
+  const [selectedStatus, setSelectedStatus] = useState("all")
+
+  const { data: tracker = [], isLoading: trackerLoading } = useSWR("/api/tracker", fetcher)
+
+  const labels = {
+    en: {
+      title: "Dashboard Analysis",
+      subtitle: "Comprehensive business analytics and insights",
+      filters: "Filters",
+      year: "Year",
+      brand: "Brand",
+      model: "Model",
+      status: "Status",
+      all: "All",
+      stats: "Stats",
+      totalPrixAchat: "Total Prix Achat",
+      totalRecon: "Total Recon",
+      totalEsthetique: "Total Esthétique",
+      totalTransport: "Total Transport",
+      coutantTotal: "Coutant Total",
+      acceCredit: "Acces Crédit",
+      prixAffiche: "Prix Affiche",
+      profitPotentiel: "Profit Potentiel",
+      vehiclesByColor: "Vehicles by Colour",
+      mileageDistribution: "Mileage Distribution",
+      reconEstheticTransport: "Recon / Esthétique / Transport Spend by Vehicle",
+      coutantTotalByModel: "Coutant Total by Model",
+      profitPotentielByModel: "Profit Potentiel by Model",
+      kilometrageByModel: "Kilométrage by Model",
+      sumTotals: "Sum of Coutant Total & Profit Potentiel",
+      purchaseCostVsPrice: "Purchase Cost vs Listed Price",
+      profitMarginByModel: "Profit % Margin by Model",
+      totalCostBreakdown: "Total Cost Breakdown",
+      reserveStatusSummary: "Reserve Status Summary",
+    },
+    fr: {
+      title: "Analyse Tableau de bord",
+      subtitle: "Analyses commerciales et informations complètes",
+      filters: "Filtres",
+      year: "Année",
+      brand: "Marque",
+      model: "Modèle",
+      status: "Statut",
+      all: "Tous",
+      stats: "Statistiques",
+      totalPrixAchat: "Total Prix Achat",
+      totalRecon: "Total Recon",
+      totalEsthetique: "Total Esthétique",
+      totalTransport: "Total Transport",
+      coutantTotal: "Coutant Total",
+      acceCredit: "Acces Crédit",
+      prixAffiche: "Prix Affiche",
+      profitPotentiel: "Profit Potentiel",
+      vehiclesByColor: "Véhicules par Couleur",
+      mileageDistribution: "Distribution du Kilométrage",
+      reconEstheticTransport: "Dépenses Recon / Esthétique / Transport par Véhicule",
+      coutantTotalByModel: "Coutant Total par Modèle",
+      profitPotentielByModel: "Profit Potentiel par Modèle",
+      kilometrageByModel: "Kilométrage par Modèle",
+      sumTotals: "Somme Coutant Total & Profit Potentiel",
+      purchaseCostVsPrice: "Coût d'Achat vs Prix Affiché",
+      profitMarginByModel: "Marge Bénéficiaire % par Modèle",
+      totalCostBreakdown: "Ventilation du Coût Total",
+      reserveStatusSummary: "Résumé du Statut de Réserve",
+    },
   }
-  return null
-}
 
-export default function DashboardPage() {
-  const [selectedYear, setSelectedYear] = useState('all')
-  const [selectedBrand, setSelectedBrand] = useState('all')
-  const [selectedModel, setSelectedModel] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
+  const t = labels[language as keyof typeof labels]
 
-  const { data: tracker = [], isLoading: trackerLoading } = useSWR('/api/tracker', fetcher)
-
-  const years = Array.from(new Set(tracker.map((item: any) => item.year?.toString()))).filter((y): y is string => Boolean(y))
-  const brands = Array.from(new Set(tracker.map((item: any) => item.make))).filter(Boolean)
-  const models = Array.from(new Set(
-    selectedBrand === 'all' 
-      ? tracker.map((item: any) => item.model)
-      : tracker.filter((item: any) => item.make === selectedBrand).map((item: any) => item.model)
-  )).filter(Boolean)
+  const years = Array.from(new Set(tracker.map((item: any) => item.year?.toString())))
+    .filter(Boolean)
+    .sort((a: any, b: any) => b - a)
+  const brands = Array.from(new Set(tracker.map((item: any) => item.make)))
+    .filter(Boolean)
+    .sort()
+  const models = Array.from(
+    new Set(
+      selectedBrand === "all"
+        ? tracker.map((item: any) => item.model)
+        : tracker.filter((item: any) => item.make === selectedBrand).map((item: any) => item.model),
+    ),
+  )
+    .filter(Boolean)
+    .sort()
 
   const filteredData = tracker.filter((item: any) => {
-    if (selectedYear !== 'all' && item.year?.toString() !== selectedYear) return false
-    if (selectedBrand !== 'all' && item.make !== selectedBrand) return false
-    if (selectedModel !== 'all' && item.model !== selectedModel) return false
-    if (selectedStatus === 'sold' && !item.sellStatus) return false
-    if (selectedStatus === 'unsold' && item.sellStatus) return false
+    if (selectedYear !== "all" && item.year?.toString() !== selectedYear) return false
+    if (selectedBrand !== "all" && item.make !== selectedBrand) return false
+    if (selectedModel !== "all" && item.model !== selectedModel) return false
+    if (selectedStatus === "sold" && !item.sellStatus) return false
+    if (selectedStatus === "unsold" && item.sellStatus) return false
     return true
   })
 
-  // ============ INVENTORY SECTION ============
-  
-  // Inventory by Brand
-  const inventoryByBrand: Record<string, number> = {}
+  const metrics = {
+    totalPrixAchat: filteredData.reduce((sum: number, item: any) => sum + (item.purchasePrice || 0), 0),
+    totalRecon: filteredData.reduce((sum: number, item: any) => sum + (item.reconciliation || 0), 0),
+    totalEsthetique: filteredData.reduce((sum: number, item: any) => sum + (item.adjustment || 0), 0),
+    totalTransport: filteredData.reduce((sum: number, item: any) => sum + (item.transport || 0), 0),
+    coutantTotal: filteredData.reduce((sum: number, item: any) => sum + (item.costTotal || 0), 0),
+    acceCredit: filteredData.reduce((sum: number, item: any) => sum + (item.accessCredit || 0), 0),
+    prixAffiche: filteredData.reduce((sum: number, item: any) => sum + (item.displayedPrice || 0), 0),
+    profitPotentiel: filteredData.reduce((sum: number, item: any) => sum + (item.potentialProfit || 0), 0),
+  }
+
+  const colorCounts: Record<string, number> = {}
   filteredData.forEach((item: any) => {
-    const brand = item.make || 'Unknown'
-    inventoryByBrand[brand] = (inventoryByBrand[brand] || 0) + 1
+    const color = item.color || "Unknown"
+    colorCounts[color] = (colorCounts[color] || 0) + 1
   })
-  const chartInventoryByBrand = Object.entries(inventoryByBrand)
-    .map(([name, value]) => ({ name, value }))
+  const vehiclesByColorData = Object.entries(colorCounts)
+    .map(([color, count]) => ({ name: color, value: count }))
+    .sort((a, b) => b.value - a.value)
 
-  // Inventory by Model
-  const inventoryByModel: Record<string, number> = {}
-  filteredData.forEach((item: any) => {
-    const model = item.model || 'Unknown'
-    inventoryByModel[model] = (inventoryByModel[model] || 0) + 1
-  })
-  const chartInventoryByModel = Object.entries(inventoryByModel)
-    .map(([name, value]) => ({ name, value }))
-    .slice(0, 10)
-
-  // Inventory Value by Brand
-  const inventoryValueByBrand: Record<string, any> = {}
-  filteredData.forEach((item: any) => {
-    const brand = item.make || 'Unknown'
-    if (!inventoryValueByBrand[brand]) {
-      inventoryValueByBrand[brand] = { brand, value: 0 }
-    }
-    inventoryValueByBrand[brand].value += (item.displayedPrice || 0)
-  })
-  const chartInventoryValue = Object.values(inventoryValueByBrand)
-    .slice(0, 10)
-
-  // Cars by Year
-  const carsByYear: Record<string, number> = {}
-  filteredData.forEach((item: any) => {
-    const year = item.year?.toString() || 'Unknown'
-    carsByYear[year] = (carsByYear[year] || 0) + 1
-  })
-  const chartCarsByYear = Object.entries(carsByYear)
-    .map(([name, value]) => ({ name, value }))
-    .slice(0, 15)
-
-  // Inventory Color Distribution
-  const colorDistribution: Record<string, number> = {}
-  filteredData.forEach((item: any) => {
-    const color = item.color || 'Unknown'
-    colorDistribution[color] = (colorDistribution[color] || 0) + 1
-  })
-  const chartColorDistribution = Object.entries(colorDistribution)
-    .map(([name, value]) => ({ name, value }))
-    .slice(0, 6)
-
-  // ============ SALES SECTION ============
-
-  // Sales by Brand
-  const salesByBrand: Record<string, number> = {}
-  filteredData.forEach((item: any) => {
-    if (item.sellStatus) {
-      const brand = item.make || 'Unknown'
-      salesByBrand[brand] = (salesByBrand[brand] || 0) + 1
-    }
-  })
-  const chartSalesByBrand = Object.entries(salesByBrand)
-    .map(([name, value]) => ({ name, value }))
-    .slice(0, 10)
-
-  // Sales by Model
-  const salesByModel: Record<string, number> = {}
-  filteredData.forEach((item: any) => {
-    if (item.sellStatus) {
-      const model = item.model || 'Unknown'
-      salesByModel[model] = (salesByModel[model] || 0) + 1
-    }
-  })
-  const chartSalesByModel = Object.entries(salesByModel)
-    .map(([name, value]) => ({ name, value }))
-    .slice(0, 8)
-
-  // Sell Status (Sold vs Unsold)
-  const soldCount = filteredData.filter((item: any) => item.sellStatus).length
-  const unsoldCount = filteredData.length - soldCount
-  const sellStatusData = [
-    { name: 'Sold', value: soldCount, fill: '#10b981' },
-    { name: 'Unsold', value: unsoldCount, fill: '#ef4444' }
+  const mileageRanges = [
+    { range: "[0, 58000]", min: 0, max: 58000 },
+    { range: "[58000, 116000]", min: 58000, max: 116000 },
+    { range: "[116000, 174000]", min: 116000, max: 174000 },
   ]
-
-  // Net Profit per Car
-  const netProfitPerCar = Object.entries(
-    filteredData.reduce((acc: any, item: any) => {
-      const model = item.model || 'Unknown'
-      if (!acc[model]) {
-        acc[model] = { model, totalProfit: 0, count: 0, avgProfit: 0 }
-      }
-      acc[model].totalProfit += item.potentialProfit || 0
-      acc[model].count += 1
-      acc[model].avgProfit = acc[model].totalProfit / acc[model].count
-      return acc
-    }, {})
-  ).map(( data: any) => data)
-    .slice(0, 10)
-
-  // Expenses Breakdown
-  const expensesData: Record<string, any> = {}
-  filteredData.forEach((item: any) => {
-    const category = item.expenseCategory || 'Unknown'
-    if (!expensesData[category]) {
-      expensesData[category] = { category, value: 0 }
-    }
-    expensesData[category].value += (item.expenseAmount || 0)
+  const mileageDistribution = mileageRanges.map((range) => {
+    const count = filteredData.filter((item: any) => item.mileage >= range.min && item.mileage <= range.max).length
+    return { range: range.range, count }
   })
 
-  // ============ COST & MILEAGE SECTION (existing) ============
+  const reconEstheticByModel: Record<string, any> = {}
+  filteredData.forEach((item: any) => {
+    const model = item.model || "Unknown"
+    if (!reconEstheticByModel[model]) {
+      reconEstheticByModel[model] = {
+        model,
+        RECON: 0,
+        ESTHÉTIQUE: 0,
+        TRANSPORT: 0,
+      }
+    }
+    reconEstheticByModel[model].RECON += item.reconciliation || 0
+    reconEstheticByModel[model].ESTHÉTIQUE += item.adjustment || 0
+    reconEstheticByModel[model].TRANSPORT += item.transport || 0
+  })
 
   const dataByModel: Record<string, any> = {}
   filteredData.forEach((item: any) => {
-    const model = item.model || 'Unknown'
+    const model = item.model || "Unknown"
     if (!dataByModel[model]) {
       dataByModel[model] = {
         model,
         coutantTotal: 0,
         profitPotentiel: 0,
         mileage: 0,
-        purchasePrice: 0,
-        displayedPrice: 0,
         count: 0,
+        prixAchat: 0,
+        prixAffiche: 0,
+        blackBook: 0,
       }
     }
     dataByModel[model].coutantTotal += item.costTotal || 0
     dataByModel[model].profitPotentiel += item.potentialProfit || 0
     dataByModel[model].mileage += item.mileage || 0
-    dataByModel[model].purchasePrice += item.purchasePrice || 0
-    dataByModel[model].displayedPrice += item.displayedPrice || 0
     dataByModel[model].count += 1
+    dataByModel[model].prixAchat += item.purchasePrice || 0
+    dataByModel[model].prixAffiche += item.displayedPrice || 0
+    dataByModel[model].blackBook += item.blackBook || 0
   })
 
-  const chartDataByModel = Object.values(dataByModel)
+  const profitMarginByModel = Object.values(dataByModel).map((item: any) => {
+    const marginPercent = item.prixAffiche > 0 ? ((item.profitPotentiel / item.prixAffiche) * 100).toFixed(1) : 0
+    return {
+      ...item,
+      marginPercent: Number(marginPercent),
+    }
+  })
+
+  const kilometrageByModel = Object.values(dataByModel).map((item: any) => ({
+    model: item.model,
+    averageKilometrage: item.count > 0 ? Math.round(item.mileage / item.count) : 0,
+  }))
+
+  const reserveTrue = filteredData.filter((item: any) => item.reserve === true).length
+  const reserveFalse = filteredData.length - reserveTrue
+  const reserveStatusData = [
+    { name: "TRUE", value: reserveTrue },
+    { name: "FALSE", value: reserveFalse },
+  ]
+
+  const chartData = Object.values(dataByModel)
+  const soldCount = filteredData.filter((item: any) => item.sellStatus).length
+  const unsoldCount = filteredData.length - soldCount
+  const statusData = [
+    { name: "Sold", value: soldCount },
+    { name: "Unsold", value: unsoldCount },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-8">
-      <header className="mb-12">
-        <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Dashboard Analytics</h1>
-        <p className="text-muted-foreground text-lg">Comprehensive sales, inventory & performance insights</p>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border sticky top-0 z-10 bg-card/50 backdrop-blur">
+        <div className="px-8 py-8">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            {t.title}
+          </h2>
+          <p className="text-muted-foreground mt-2">{t.subtitle}</p>
+        </div>
       </header>
 
-      {/* Filters */}
-      <Card className="mb-8 shadow-lg border-0">
-        <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Year</label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {years.map((year) => (
-                    <SelectItem key={String(year)} value={String(year)}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      <div className="p-8 space-y-8">
+        <Card className="bg-card/50 backdrop-blur border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">📊</span>
+              {t.stats}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: t.totalPrixAchat, value: metrics.totalPrixAchat, gradient: "from-blue-600 to-blue-400" },
+                { label: t.totalRecon, value: metrics.totalRecon, gradient: "from-purple-600 to-purple-400" },
+                { label: t.totalEsthetique, value: metrics.totalEsthetique, gradient: "from-pink-600 to-pink-400" },
+                { label: t.totalTransport, value: metrics.totalTransport, gradient: "from-amber-600 to-amber-400" },
+                { label: t.coutantTotal, value: metrics.coutantTotal, gradient: "from-emerald-600 to-emerald-400" },
+                { label: t.acceCredit, value: metrics.acceCredit, gradient: "from-cyan-600 to-cyan-400" },
+                { label: t.prixAffiche, value: metrics.prixAffiche, gradient: "from-rose-600 to-rose-400" },
+                { label: t.profitPotentiel, value: metrics.profitPotentiel, gradient: "from-teal-600 to-teal-400" },
+              ].map((stat) => (
+                <Card key={stat.label} className={`bg-gradient-to-br ${stat.gradient} border-0 shadow-lg`}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-white">{stat.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-white">
+                      ${stat.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Brand</label>
-              <Select value={selectedBrand} onValueChange={(val) => {
-                setSelectedBrand(val)
-                setSelectedModel('all')
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Brands</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={String(brand)} value={String(brand)}>
-                      {String(brand)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <Card className="bg-card/50 backdrop-blur border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg">{t.filters}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.year}</label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    {years.map((year: any) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.brand}</label>
+                <Select
+                  value={selectedBrand}
+                  onValueChange={(val) => {
+                    setSelectedBrand(val)
+                    setSelectedModel("all")
+                  }}
+                >
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    {brands.map((brand: any) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.model}</label>
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    {models.map((model: any) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.status}</label>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    <SelectItem value="sold">Sold</SelectItem>
+                    <SelectItem value="unsold">Unsold</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Model</label>
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Models</SelectItem>
-                  {models.map((model) => (
-                    <SelectItem key={String(model)} value={String(model)}>
-                      {String(model)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {!trackerLoading && (
+          <>
+            {/* 1. COUTANT TOTAL by Model */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>{t.coutantTotalByModel}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                    <Bar dataKey="coutantTotal" fill="#3b82f6" name="Coutant Total" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="sold">Sold</SelectItem>
-                  <SelectItem value="unsold">Unsold</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            {/* 2. PROFIT POTENTIEL by Model */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>{t.profitPotentielByModel}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                    <Bar dataKey="profitPotentiel" fill="#ec4899" name="Profit Potentiel" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-      {!trackerLoading && (
-        <div className="space-y-12">
-          {/* ============ COST & MILEAGE ANALYSIS (MOVED TO TOP) ============ */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">📊 Cost & Mileage Analysis by Model</h2>
-            <div className="grid grid-cols-1  gap-8">
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Coutant Total by Model</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartDataByModel.filter((item: any) => item.model !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} interval={chartDataByModel.length > 10 ? Math.floor(chartDataByModel.length / 10) : 0} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="coutantTotal" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+            {/* 3. KILOMÉTRAGE by Model */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>{t.kilometrageByModel}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={kilometrageByModel}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => `${value.toLocaleString()} km`} />
+                    <Bar dataKey="averageKilometrage" fill="#10b981" name="Average Kilométrage" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Kilométrage by Model</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartDataByModel.filter((item: any) => item.model !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} interval={chartDataByModel.length > 10 ? Math.floor(chartDataByModel.length / 10) : 0} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="mileage" fill="#10b981" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+        {/* 4. Sum totals by model chart */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>{t.sumTotals}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value: any) => `${value.toLocaleString()}`}
+                      contentStyle={{ backgroundColor: "rgba(0, 0, 0, 0.8)", border: "none", borderRadius: "8px" }}
+                    />
+                    <Legend />
+                    <Bar dataKey="coutantTotal" fill="#3b82f6" name="Sum of COUTANT TOTAL" />
+                    <Bar dataKey="profitPotentiel" fill="#1f2937" name="Sum of PROFIT POTENTIEL" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Profit Potentiel by Model</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartDataByModel.filter((item: any) => item.model !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} interval={chartDataByModel.length > 10 ? Math.floor(chartDataByModel.length / 10) : 0} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="profitPotentiel" fill="#ec4899" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* ============ INVENTORY DASHBOARD ============ */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">📦 Inventory Dashboard</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="shadow-lg border-0">
+              {/* 5. PURCHASE COST VS LISTED PRICE */}
+              <Card className="bg-card/50 backdrop-blur border-border/50">
                 <CardHeader>
-                  <CardTitle>Inventory by Brand (Count)</CardTitle>
+                  <CardTitle>{t.purchaseCostVsPrice}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartInventoryByBrand.filter((item: any) => item.name !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                      <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
                       <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#3b82f6" name="Count" />
+                      <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                      <Legend />
+                      <Bar dataKey="prixAchat" fill="#000000" name="Prix Achat" />
+                      <Bar dataKey="prixAffiche" fill="#3b82f6" name="Prix Affiche" />
+                      <Bar dataKey="blackBook" fill="#6b7280" name="Black Book" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg border-0">
+              {/* 6. PROFIT % MARGIN BY MODEL */}
+              <Card className="bg-card/50 backdrop-blur border-border/50">
                 <CardHeader>
-                  <CardTitle>Inventory by Model (Count)</CardTitle>
+                  <CardTitle>{t.profitMarginByModel}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartInventoryByModel.filter((item: any) => item.name !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#8b5cf6" name="Units" />
-                    </BarChart>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={profitMarginByModel}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                      <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                      <YAxis label={{ value: "Profit %", angle: -90, position: "insideLeft" }} />
+                      <Tooltip formatter={(value: any) => `${value}%`} />
+                      <Line
+                        type="monotone"
+                        dataKey="marginPercent"
+                        stroke="#10b981"
+                        strokeWidth={3}
+                        dot={{ fill: "#10b981", r: 5 }}
+                        name="Profit %"
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
+            </div>
 
-              <Card className="shadow-lg border-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* 7. VEHICALS BY COLOUR */}
+              <Card className="bg-card/50 backdrop-blur border-border/50">
                 <CardHeader>
-                  <CardTitle>Inventory Value by Brand</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartInventoryValue.filter((item: any) => item.brand !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="brand" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#ec4899" name="Total Value" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Cars by Year (Histogram)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartCarsByYear.filter((item: any) => item.name !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#f59e0b" name="Count" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg border-0 lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Inventory Color Distribution</CardTitle>
+                  <CardTitle>{t.vehiclesByColor}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex justify-center">
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie data={chartColorDistribution.filter((item: any) => item.name !== 'Unknown')} cx="50%" cy="50%" labelLine={false} label={({ name, value }) => `${name}: ${value}`} outerRadius={100} dataKey="value">
-                        {chartColorDistribution.filter((item: any) => item.name !== 'Unknown').map((entry, index) => (
+                      <Pie
+                        data={vehiclesByColorData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={100}
+                        innerRadius={60}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {vehiclesByColorData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
-          </section>
 
-          {/* ============ SALES DASHBOARD ============ */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">🛍️ Sales Dashboard</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="shadow-lg border-0">
+              {/* 8. Mileage Distribution */}
+              <Card className="bg-card/50 backdrop-blur border-border/50">
                 <CardHeader>
-                  <CardTitle>Sales by Brand</CardTitle>
+                  <CardTitle>{t.mileageDistribution}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartSalesByBrand.filter((item: any) => item.name !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={mileageDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                      <XAxis dataKey="range" />
                       <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#3b82f6" name="Sold Units" />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#3b82f6" name="Vehicle Count" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Sales by Model</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartSalesByModel.filter((item: any) => item.name !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#f59e0b" name="Sold Units" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Sell Status: Sold vs Unsold</CardTitle>
-                </CardHeader>
-                <CardContent className="flex justify-center">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                      <Pie data={sellStatusData} cx="50%" cy="50%" labelLine={false} label={({ name, value }) => `${name}: ${value}`} outerRadius={100} dataKey="value">
-                        {sellStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
             </div>
-          </section>
 
-          {/* ============ ADDITIONAL INSIGHTS ============ */}
-          <section>
-  
-              <Card className="shadow-lg border-0">
+            {/* 9. Recon / Esthétique / Transport Spend by Vehicle */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>{t.reconEstheticTransport}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={Object.values(reconEstheticByModel)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                    <Legend />
+                    <Bar dataKey="RECON" stackId="a" fill="#3b82f6" />
+                    <Bar dataKey="ESTHÉTIQUE" stackId="a" fill="#f59e0b" />
+                    <Bar dataKey="TRANSPORT" stackId="a" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* 10. Total Cost Breakdown and Reserve Status */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* 10a. Total Cost Breakdown */}
+              <Card className="bg-card/50 backdrop-blur border-border/50 lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Net Profit per Car (by Model)</CardTitle>
+                  <CardTitle>{t.totalCostBreakdown}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={netProfitPerCar.filter((item: any) => item.model !== 'Unknown')}>
-                      <CartesianGrid strokeDasharray="3 3" />
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
                       <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
                       <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="avgProfit" fill="#06b6d4" name="Avg Profit per Unit" />
+                      <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                      <Bar dataKey="coutantTotal" fill="#9333ea" name="Total Cost" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-          </section>
-        </div>
-      )}
+
+              {/* 11. Reserve Status Summary - Made smaller to take 1/3 width */}
+              <Card className="bg-card/50 backdrop-blur border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-sm">{t.reserveStatusSummary}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex justify-center">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={reserveStatusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        innerRadius={50}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {reserveStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 12. Sum of Coutant Total & Profit Potentiel by Model - New chart */}
+            <Card className="bg-card/50 backdrop-blur border-border/50">
+              <CardHeader>
+                <CardTitle>Sum of Coutant Total & Profit Potentiel by Model</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value: any) => `$${value.toLocaleString()}`}
+                      contentStyle={{ backgroundColor: "rgba(0, 0, 0, 0.8)", border: "none", borderRadius: "8px" }}
+                    />
+                    <Legend />
+                    <Bar dataKey="coutantTotal" fill="#3b82f6" name="Sum of COUTANT TOTAL" />
+                    <Bar dataKey="profitPotentiel" fill="#10b981" name="Sum of PROFIT POTENTIEL" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
     </div>
   )
 }

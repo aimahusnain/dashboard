@@ -13,9 +13,9 @@ import { useLanguage } from "@/hooks/use-language"
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function ValidationPage() {
-  type TabKeys = "brand" | "model" | "color" | "year"
+  type TabKeys = "brand" | "model" | "color" | "year" | "category"
 
-  const tabs: TabKeys[] = ["brand", "model", "color", "year"]
+  const tabs: TabKeys[] = ["brand", "model", "color", "year", "category"]
 
   const { language } = useLanguage()
   const [showDialog, setShowDialog] = useState(false)
@@ -32,6 +32,7 @@ export default function ValidationPage() {
       model: "Model",
       color: "Color",
       year: "Year",
+      category: "Category",
       status: "Status",
       actions: "Actions",
       addNew: "Add New",
@@ -47,6 +48,7 @@ export default function ValidationPage() {
       model: "Modèle",
       color: "Couleur",
       year: "Année",
+      category: "Catégorie",
       status: "Statut",
       actions: "Actions",
       addNew: "Ajouter nouveau",
@@ -57,8 +59,8 @@ export default function ValidationPage() {
   }
 
   const tabLabels: Record<string, Record<TabKeys, string>> = {
-    en: { brand: "Brands", model: "Models", color: "Colors", year: "Years" },
-    fr: { brand: "Marques", model: "Modèles", color: "Couleurs", year: "Années" },
+    en: { brand: "Brands", model: "Models", color: "Colors", year: "Years", category: "Categories" },
+    fr: { brand: "Marques", model: "Modèles", color: "Couleurs", year: "Années", category: "Catégories" },
   }
 
   const t = labels[language as keyof typeof labels]
@@ -120,7 +122,7 @@ export default function ValidationPage() {
       </header>
 
       <div className="p-4 md:p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {tabs.map((tab) => (
             <Card key={tab} className="bg-card/80 backdrop-blur border-border/50 hover:border-border transition-colors">
               <CardHeader className="pb-4">

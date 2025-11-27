@@ -1,65 +1,52 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Loader2, Plus, Trash2, Edit2, Check, X } from 'lucide-react'
-import useSWR from 'swr'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { useLanguage } from '@/hooks/use-language'
+import { useState } from "react"
+import { Loader2, Plus, Trash2, Edit2, Check, X } from "lucide-react"
+import useSWR from "swr"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useLanguage } from "@/hooks/use-language"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function SalesmanDataPage() {
   const { language } = useLanguage()
-  const { data: salesmen = [], isLoading, mutate } = useSWR('/api/salesmen', fetcher)
+  const { data: salesmen = [], isLoading, mutate } = useSWR("/api/salesmen", fetcher)
   const [isOpen, setIsOpen] = useState(false)
-  const [formData, setFormData] = useState({ name: '', commissionRate: '' })
+  const [formData, setFormData] = useState({ name: "", commissionRate: "" })
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editFormData, setEditFormData] = useState({ name: '', commissionRate: '' })
+  const [editFormData, setEditFormData] = useState({ name: "", commissionRate: "" })
 
   const labels = {
     en: {
-      title: 'Salesman Data',
-      subtitle: 'Manage salesman information and commission rates',
-      addSalesman: 'Add Salesman',
-      name: 'Salesman Name',
-      rate: 'Commission Rate (%)',
-      records: 'Salesman Records',
-      delete: 'Delete',
-      edit: 'Edit',
-      save: 'Save',
-      cancel: 'Cancel',
-      noRecords: 'No salesmen yet',
+      title: "Salesman Data",
+      subtitle: "Manage salesman information and commission rates",
+      addSalesman: "Add Salesman",
+      name: "Salesman Name",
+      rate: "Commission Rate (%)",
+      records: "Salesman Records",
+      delete: "Delete",
+      edit: "Edit",
+      save: "Save",
+      cancel: "Cancel",
+      noRecords: "No salesmen yet",
     },
     fr: {
-      title: 'Données des vendeurs',
-      subtitle: 'Gérer les informations des vendeurs et les taux de commission',
-      addSalesman: 'Ajouter un vendeur',
-      name: 'Nom du vendeur',
-      rate: 'Taux de commission (%)',
-      records: 'Enregistrements des vendeurs',
-      delete: 'Supprimer',
-      edit: 'Modifier',
-      save: 'Enregistrer',
-      cancel: 'Annuler',
-      noRecords: 'Aucun vendeur pour le moment',
-    }
+      title: "Données des vendeurs",
+      subtitle: "Gérer les informations des vendeurs et les taux de commission",
+      addSalesman: "Ajouter un vendeur",
+      name: "Nom du vendeur",
+      rate: "Taux de commission (%)",
+      records: "Enregistrements des vendeurs",
+      delete: "Supprimer",
+      edit: "Modifier",
+      save: "Enregistrer",
+      cancel: "Annuler",
+      noRecords: "Aucun vendeur pour le moment",
+    },
   }
 
   const t = labels[language as keyof typeof labels]
@@ -67,41 +54,54 @@ export default function SalesmanDataPage() {
   const handleAddSalesman = async () => {
     if (!formData.name || !formData.commissionRate) return
     try {
-      await fetch('/api/salesmen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/salesmen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
       mutate()
-      setFormData({ name: '', commissionRate: '' })
+      setFormData({ name: "", commissionRate: "" })
       setIsOpen(false)
     } catch (error) {
-      console.error('Error adding salesman:', error)
+      console.error("Error adding salesman:", error)
     }
   }
 
   const handleEditSalesman = async (id: string) => {
-    if (!editFormData.name || !editFormData.commissionRate) return
+    if (!editFormData.name.trim() || !editFormData.commissionRate) {
+      alert("Please fill in all fields")
+      return
+    }
     try {
-      await fetch(`/api/salesmen/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`/api/salesmen/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editFormData),
       })
+      if (!response.ok) throw new Error("Update failed")
       mutate()
       setEditingId(null)
-      setEditFormData({ name: '', commissionRate: '' })
+      setEditFormData({ name: "", commissionRate: "" })
     } catch (error) {
-      console.error('Error updating salesman:', error)
+      console.error("Error updating salesman:", error)
+      alert("Error updating salesman")
     }
   }
 
   const handleDelete = async (id: string) => {
+    console.log("[v0] Delete initiated for ID:", id)
+    if (!id) {
+      alert("Error: Invalid ID")
+      return
+    }
+    if (!window.confirm("Are you sure you want to delete this salesman?")) return
     try {
-      await fetch(`/api/salesmen/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/salesmen/delete?id=${id}`, { method: "DELETE" })
+      if (!response.ok) throw new Error("Delete failed")
       mutate()
     } catch (error) {
-      console.error('Error deleting salesman:', error)
+      console.error("Error deleting salesman:", error)
+      alert("Error deleting salesman")
     }
   }
 
@@ -118,7 +118,9 @@ export default function SalesmanDataPage() {
       <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="px-8 py-8 flex justify-between items-center">
           <div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{t.title}</h2>
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {t.title}
+            </h2>
             <p className="text-muted-foreground mt-2">{t.subtitle}</p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -188,7 +190,7 @@ export default function SalesmanDataPage() {
                   </TableHeader>
                   <TableBody>
                     {salesmen.map((salesman: any) => (
-                      <TableRow key={salesman._id}>
+                      <TableRow key={salesman._id || salesman.id}>
                         <TableCell className="font-medium">
                           {editingId === salesman._id ? (
                             <Input
@@ -245,7 +247,11 @@ export default function SalesmanDataPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDelete(salesman._id)}
+                                onClick={() => {
+                                  const salesmantId = salesman.id || salesman._id
+                                  console.log("[v0] Attempting delete with ID:", salesmantId)
+                                  handleDelete(salesmantId)
+                                }}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 size={16} />

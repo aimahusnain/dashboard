@@ -101,9 +101,11 @@ model Tracker {
   adjustment              Float?
   costTotal               Float?
   accessCredit            Float?
+  blackBook               Float?
   displayedPrice          Float?
   potentialProfit         Float?
   sellStatus              Boolean   @default(false)
+  reserve                 Boolean   @default(false)
   customerName            String?
   saleDate                String?
   paid                    String?
@@ -125,7 +127,6 @@ model Tracker {
 
   @@map("tracker")
 }
-
 
 model PayrollEntry {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId

@@ -24,12 +24,15 @@ const COLUMNS = [
   "color",
   "purchasePrice",
   "reconciliation",
+  "estethique",
   "transport",
   "adjustment",
   "costTotal",
   "accessCredit",
   "displayedPrice",
   "potentialProfit",
+  "blackBook",
+  "reserve",
   "customerName",
   "saleDate",
   "paid",
@@ -39,6 +42,7 @@ const COLUMNS = [
   "prGP",
   "rebate",
   "vassCost",
+  "cost",
   "prAss",
   "miscellaneousExpenses",
   "totalProfit",
@@ -60,12 +64,15 @@ const COLUMN_LABELS = {
   color: "Color",
   purchasePrice: "Purchase Price",
   reconciliation: "Reconciliation",
+  estethique: "Esthétique",
   transport: "Transport",
   adjustment: "Adjustment",
   costTotal: "Cost Total",
   accessCredit: "Access Credit",
   displayedPrice: "Displayed Price",
   potentialProfit: "Potential Profit",
+  blackBook: "Black Book",
+  reserve: "Reserve",
   customerName: "Customer Name",
   saleDate: "Sale Date",
   paid: "Paid",
@@ -75,6 +82,7 @@ const COLUMN_LABELS = {
   prGP: "PR GP",
   rebate: "Rebate",
   vassCost: "V ASS Cost",
+  cost: "Cost",
   prAss: "PR ASS",
   miscellaneousExpenses: "Miscellaneous Expenses",
   totalProfit: "Total Profit",
@@ -87,6 +95,7 @@ const COLUMN_LABELS = {
 export default function InventoryPage() {
   const { language } = useLanguage()
   const { data: allTracker = [], isLoading } = useSWR("/api/tracker", fetcher)
+  const { data: validations = [] } = useSWR("/api/validations", fetcher)
   const [showDialog, setShowDialog] = useState(false)
   console.log(showDialog)
   const labels = {
@@ -123,8 +132,10 @@ export default function InventoryPage() {
   // Filter only unsold vehicles (sellStatus = false)
   const inventoryItems = allTracker.filter((entry: any) => entry.sellStatus === false)
 
+  const validationCategories = Array.from(new Set(validations.map((v: any) => v.category).filter(Boolean))).sort()
+
   const budgetSummary = inventoryItems.reduce((acc: any, item: any) => {
-    const category = item.category || "Uncategorized"
+    const category = validationCategories.includes(item.category) ? item.category : "Uncategorized"
     if (!acc[category]) {
       acc[category] = {
         count: 0,
@@ -136,22 +147,38 @@ export default function InventoryPage() {
     return acc
   }, {})
 
-  const budgetData = Object.entries(budgetSummary).map(([category, data]: any) => {
-    const budgetCaps: Record<string, number> = {
-      "1": 25000,
-      "2": 150000,
-      "3": 125000,
-    }
-    const budgetCap = budgetCaps[category] || 100000
-    const disponible = budgetCap - data.amount
-    return {
-      category,
-      count: data.count,
-      amount: data.amount.toFixed(2),
-      budgetCap,
-      disponible: disponible.toFixed(2),
-    }
-  })
+  const budgetData = validationCategories
+    .map((category: string) => {
+      const data = budgetSummary[category] || { count: 0, amount: 0 }
+      const budgetCaps: Record<string, number> = {
+        "1": 25000,
+        "2": 150000,
+        "3": 125000,
+      }
+      const budgetCap = budgetCaps[category] || 100000
+      const disponible = budgetCap - data.amount
+      return {
+        category,
+        count: data.count,
+        amount: data.amount.toFixed(2),
+        budgetCap,
+        disponible: disponible.toFixed(2),
+      }
+    })
+    .concat(
+      // Add uncategorized if there are any
+      budgetSummary["Uncategorized"]
+        ? [
+            {
+              category: "Uncategorized",
+              count: budgetSummary["Uncategorized"].count,
+              amount: budgetSummary["Uncategorized"].amount.toFixed(2),
+              budgetCap: 100000,
+              disponible: (100000 - budgetSummary["Uncategorized"].amount).toFixed(2),
+            },
+          ]
+        : [],
+    )
 
   const totalAmount = inventoryItems.reduce((sum: number, item: any) => sum + (item.costTotal || 0), 0)
 
@@ -224,13 +251,21 @@ export default function InventoryPage() {
                           <TableCell className="font-medium">{row.category}</TableCell>
                           <TableCell className="text-right">{row.count}</TableCell>
                           <TableCell className="text-right font-medium">
-                            ${Number.parseFloat(row.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            $
+                            {Number.parseFloat(row.amount).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </TableCell>
-                          <TableCell className="text-right">${row.budgetCap.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">${row.budgetCap.toLocaleString("en-US")}</TableCell>
                           <TableCell
                             className={`text-right font-medium ${Number.parseFloat(row.disponible) < 0 ? "text-red-600" : "text-green-600"}`}
                           >
-                            ${Number.parseFloat(row.disponible).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            $
+                            {Number.parseFloat(row.disponible).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -238,16 +273,17 @@ export default function InventoryPage() {
                         <TableCell>Total</TableCell>
                         <TableCell className="text-right">{inventoryItems.length}</TableCell>
                         <TableCell className="text-right">
-                          ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right">
-                          ${budgetData.reduce((sum: number, row: any) => sum + row.budgetCap, 0).toLocaleString()}
+                          $
+                          {budgetData.reduce((sum: number, row: any) => sum + row.budgetCap, 0).toLocaleString("en-US")}
                         </TableCell>
                         <TableCell className="text-right">
                           $
                           {(
                             budgetData.reduce((sum: number, row: any) => sum + row.budgetCap, 0) - totalAmount
-                          ).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -293,7 +329,53 @@ export default function InventoryPage() {
                 <div className="w-full overflow-x-auto">
                   <div className="max-h-[600px] overflow-y-auto border rounded-lg">
                     <Table>
+                     
                       <TableHeader className="sticky top-0 bg-card z-20">
+                          <TableRow className="font-bold bg-muted/50 sticky bottom-0">
+                          {COLUMNS.map((col) => {
+                            const totalColumns = [
+                              "purchasePrice",
+                              "reconciliation",
+                              "estethique",
+                              "transport",
+                              "adjustment",
+                              "costTotal",
+                              "accessCredit",
+                              "blackBook",
+                              "displayedPrice",
+                              "potentialProfit",
+                            ]
+
+                            if (totalColumns.includes(col)) {
+                              const total = inventoryItems.reduce((sum: number, item: any) => {
+                                return sum + (Number(item[col]) || 0)
+                              }, 0)
+                              return (
+                                <TableCell key={`total-${col}`} className="text-right whitespace-nowrap">
+                                  $
+                                  {total.toLocaleString("en-US", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </TableCell>
+                              )
+                            }
+
+                            if (col === "category") {
+                              return (
+                                <TableCell key={`total-${col}`} className="whitespace-nowrap">
+                                  Total
+                                </TableCell>
+                              )
+                            }
+
+                            return (
+                              <TableCell key={`total-${col}`} className="whitespace-nowrap">
+                                -
+                              </TableCell>
+                            )
+                          })}
+                        </TableRow>
                         <TableRow>
                           {COLUMNS.map((col) => (
                             <TableHead key={col} className="whitespace-nowrap">
@@ -307,11 +389,16 @@ export default function InventoryPage() {
                           <TableRow key={entry._id}>
                             {COLUMNS.map((col) => (
                               <TableCell key={`${entry._id}-${col}`} className="whitespace-nowrap text-xs">
-                                {col === "paid" ? <Checkbox checked={entry[col]} disabled /> : entry[col] || ""}
+                                {col === "paid" || col === "reserve" ? (
+                                  <Checkbox checked={entry[col]} disabled />
+                                ) : (
+                                  entry[col] || ""
+                                )}
                               </TableCell>
                             ))}
                           </TableRow>
                         ))}
+                       
                       </TableBody>
                     </Table>
                   </div>

@@ -81,6 +81,8 @@ const COLUMN_LABELS = {
   notes: "Notes",
 }
 
+const TOTALS_COLUMNS = ["purchasePrice", "costTotal", "displayedPrice", "potentialProfit", "netProfit"]
+
 const handleDeleteAll = async (mutate: any) => {
   if (window.confirm("Are you sure you want to delete ALL sold records? This action cannot be undone.")) {
     try {
@@ -103,6 +105,7 @@ export default function SoldPage() {
       records: "Sold Records",
       noRecords: "No sold vehicles yet",
       delete: "Delete",
+      totals: "Totals",
     },
     fr: {
       title: "Véhicules vendus",
@@ -110,12 +113,26 @@ export default function SoldPage() {
       records: "Enregistrements vendus",
       noRecords: "Aucun véhicule vendu pour le moment",
       delete: "Supprimer",
+      totals: "Totaux",
     },
   }
 
   const t = labels[language as keyof typeof labels]
 
   const soldTracker = allTracker.filter((entry: any) => entry.sellStatus === true)
+
+  const calculateTotals = () => {
+    const totals: Record<string, number> = {}
+    TOTALS_COLUMNS.forEach((col) => {
+      totals[col] = soldTracker.reduce((sum: number, entry: any) => {
+        const val = Number.parseFloat(entry[col]) || 0
+        return sum + val
+      }, 0)
+    })
+    return totals
+  }
+
+  const totals = calculateTotals()
 
   const handleDelete = async (id: string) => {
     try {
@@ -150,7 +167,6 @@ export default function SoldPage() {
             ) : soldTracker.length === 0 ? (
               <p className="text-muted-foreground text-sm">{t.noRecords}</p>
             ) : (
-              /* Add sticky header and responsive scrolling */
               <div className="flex flex-col gap-4">
                 {soldTracker.length > 0 && (
                   <Button
@@ -166,6 +182,22 @@ export default function SoldPage() {
                   <div className="max-h-[600px] overflow-y-auto border rounded-lg">
                     <Table>
                       <TableHeader className="sticky top-0 bg-card z-20">
+                        <TableRow className="bg-yellow-50 dark:bg-yellow-950 border-b-2">
+                          <TableHead className="py-2 px-3 font-bold text-yellow-900 dark:text-yellow-100">
+                            {t.totals}
+                          </TableHead>
+                          {COLUMNS.map((col) => (
+                            <TableHead
+                              key={`total-${col}`}
+                              className="whitespace-nowrap py-2 px-3 text-yellow-900 dark:text-yellow-100 font-bold"
+                            >
+                              {TOTALS_COLUMNS.includes(col)
+                                ? `$${totals[col]?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`
+                                : ""}
+                            </TableHead>
+                          ))}
+                          <TableHead className="py-2 px-3"></TableHead>
+                        </TableRow>
                         <TableRow>
                           {COLUMNS.map((col) => (
                             <TableHead key={col} className="whitespace-nowrap">

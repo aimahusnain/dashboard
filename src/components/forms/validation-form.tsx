@@ -24,7 +24,7 @@ const COLORS = [
 
 const STATUSES = ['Estimation', 'Financing', 'Paid', 'Sold', 'Arbitration']
 
-const CATEGORIES = ['1', '2', '3']
+const CATEGORIES = ['1', '2', '3','4','5']
 
 interface ValidationFormProps {
   onSubmit: (data: any) => void

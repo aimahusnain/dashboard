@@ -1,39 +1,51 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma"
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    await prisma.salesman.delete({
+    const salesman = await prisma.salesman.findUnique({
       where: { id },
     })
-    return Response.json({ success: true })
+    if (!salesman) {
+      return Response.json({ error: "Salesman not found" }, { status: 404 })
+    }
+    return Response.json(salesman)
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to delete salesman' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to fetch salesman" }, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const body = await request.json()
-    
-    const updatedSalesman = await prisma.salesman.update({
+
+    const result = await prisma.salesman.update({
       where: { id },
       data: {
         name: body.name,
-        commissionRate: parseFloat(body.commissionRate),
+        commissionRate: Number.parseFloat(body.commissionRate),
       },
     })
-    return Response.json(updatedSalesman)
+    return Response.json(result)
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to update salesman' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to update salesman" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    console.log("[v0] Deleting salesman with id:", id)
+
+    const result = await prisma.salesman.delete({
+      where: { id },
+    })
+    return Response.json(result)
+  } catch (error) {
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to delete salesman" }, { status: 500 })
   }
 }
