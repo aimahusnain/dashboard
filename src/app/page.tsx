@@ -31,6 +31,8 @@ export default function DashboardAnalysisPage() {
   const [selectedBrand, setSelectedBrand] = useState("all")
   const [selectedModel, setSelectedModel] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedColor, setSelectedColor] = useState("all")
 
   const { data: tracker = [], isLoading: trackerLoading } = useSWR("/api/tracker", fetcher)
 
@@ -43,6 +45,8 @@ export default function DashboardAnalysisPage() {
       brand: "Brand",
       model: "Model",
       status: "Status",
+      category: "Category",
+      color: "Color",
       all: "All",
       stats: "Stats",
       totalPrixAchat: "Total Prix Achat",
@@ -73,6 +77,8 @@ export default function DashboardAnalysisPage() {
       brand: "Marque",
       model: "Modèle",
       status: "Statut",
+      category: "Catégorie",
+      color: "Couleur",
       all: "Tous",
       stats: "Statistiques",
       totalPrixAchat: "Total Prix Achat",
@@ -114,11 +120,19 @@ export default function DashboardAnalysisPage() {
   )
     .filter(Boolean)
     .sort()
+  const categories = Array.from(new Set(tracker.map((item: any) => item.category)))
+    .filter(Boolean)
+    .sort()
+  const colors = Array.from(new Set(tracker.map((item: any) => item.color)))
+    .filter(Boolean)
+    .sort()
 
   const filteredData = tracker.filter((item: any) => {
     if (selectedYear !== "all" && item.year?.toString() !== selectedYear) return false
     if (selectedBrand !== "all" && item.make !== selectedBrand) return false
     if (selectedModel !== "all" && item.model !== selectedModel) return false
+    if (selectedCategory !== "all" && item.category !== selectedCategory) return false
+    if (selectedColor !== "all" && item.color !== selectedColor) return false
     if (selectedStatus === "sold" && !item.sellStatus) return false
     if (selectedStatus === "unsold" && item.sellStatus) return false
     return true
@@ -273,7 +287,7 @@ export default function DashboardAnalysisPage() {
             <CardTitle className="text-lg">{t.filters}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t.year}</label>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -344,6 +358,40 @@ export default function DashboardAnalysisPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.category}</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    {categories.map((category: any) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.color}</label>
+                <Select value={selectedColor} onValueChange={setSelectedColor}>
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t.all}</SelectItem>
+                    {colors.map((color: any) => (
+                      <SelectItem key={color} value={color}>
+                        {color}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -404,26 +452,34 @@ export default function DashboardAnalysisPage() {
               </CardContent>
             </Card>
 
-        {/* 4. Sum totals by model chart */}
+            {/* 4. Sum totals shown at top */}
             <Card className="bg-card/50 backdrop-blur border-border/50">
               <CardHeader>
                 <CardTitle>{t.sumTotals}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
-                    <XAxis dataKey="model" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value: any) => `${value.toLocaleString()}`}
-                      contentStyle={{ backgroundColor: "rgba(0, 0, 0, 0.8)", border: "none", borderRadius: "8px" }}
-                    />
-                    <Legend />
-                    <Bar dataKey="coutantTotal" fill="#3b82f6" name="Sum of COUTANT TOTAL" />
-                    <Bar dataKey="profitPotentiel" fill="#1f2937" name="Sum of PROFIT POTENTIEL" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="bg-gradient-to-br from-blue-600 to-blue-400 border-0 shadow-lg">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-white">{t.coutantTotal}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-white">
+                        ${metrics.coutantTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-pink-600 to-pink-400 border-0 shadow-lg">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-white">{t.profitPotentiel}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-white">
+                        ${metrics.profitPotentiel.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
 
