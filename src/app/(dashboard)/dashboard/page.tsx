@@ -215,8 +215,8 @@ export default function DashboardAnalysisPage() {
   ]
 
   const chartData = Object.values(dataByModel)
-  const soldCount = filteredData.filter((item: any) => item.sellStatus).length
-  const unsoldCount = filteredData.length - soldCount
+  // const soldCount = filteredData.filter((item: any) => item.sellStatus).length
+  // const unsoldCount = filteredData.length - soldCount
   // const statusData = [
   //   { name: "Sold", value: soldCount },
   //   { name: "Unsold", value: unsoldCount },
