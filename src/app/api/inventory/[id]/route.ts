@@ -1,12 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, context: any) {
   try {
-    const { id } = params
+    const { id } = await context.params
 
     const item = await prisma.inventory.findUnique({
       where: { id },
@@ -19,16 +16,16 @@ export async function GET(
     return NextResponse.json(item)
   } catch (error) {
     console.error('Database error:', error)
-    return NextResponse.json({ error: 'Failed to fetch inventory item' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch inventory item' },
+      { status: 500 }
+    )
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, context: any) {
   try {
-    const { id } = params
+    const { id } = await context.params
     const body = await request.json()
 
     const result = await prisma.inventory.update({
@@ -46,16 +43,16 @@ export async function PUT(
     return NextResponse.json(result)
   } catch (error) {
     console.error('Database error:', error)
-    return NextResponse.json({ error: 'Failed to update inventory item' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to update inventory item' },
+      { status: 500 }
+    )
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: Request, context: any) {
   try {
-    const { id } = params
+    const { id } = await context.params
 
     await prisma.inventory.delete({
       where: { id },
@@ -64,6 +61,9 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Database error:', error)
-    return NextResponse.json({ error: 'Failed to delete inventory item' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to delete inventory item' },
+      { status: 500 }
+    )
   }
 }
