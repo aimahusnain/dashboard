@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+{ params }: { params: { id: string } }
 ) {
   try {
     const { id } = await params;
@@ -33,7 +33,7 @@ export async function GET(
 // PUT update payroll entry
 export async function PUT(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+{ params }: { params: { id: string } }
 ) {
   try {
     const { id } = await params;
@@ -71,7 +71,7 @@ export async function PUT(
 // DELETE payroll entry
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+{ params }: { params: { id: string } }
 ) {
   try {
     const { id } = await params;
