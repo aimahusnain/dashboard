@@ -148,7 +148,7 @@ export default function InventoryPage() {
   }, {})
 
   const budgetData = validationCategories
-    .map((category: string) => {
+    .map((category:any) => {
       const data = budgetSummary[category] || { count: 0, amount: 0 }
       const budgetCaps: Record<string, number> = {
         "1": 25000,
