@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 
-export async function DELETE(request: Request, context: any) {
+export async function DELETE(context: any) {
   try {
     const { id } = await context.params
 
