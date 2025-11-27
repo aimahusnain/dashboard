@@ -3,16 +3,19 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-{ params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
+
     const item = await prisma.inventory.findUnique({
       where: { id },
     })
+
     if (!item) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
+
     return NextResponse.json(item)
   } catch (error) {
     console.error('Database error:', error)
@@ -22,11 +25,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-{ params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
+
     const result = await prisma.inventory.update({
       where: { id },
       data: {
@@ -38,6 +42,7 @@ export async function PUT(
         quantity: body.quantity ? parseInt(body.quantity) : undefined,
       },
     })
+
     return NextResponse.json(result)
   } catch (error) {
     console.error('Database error:', error)
@@ -47,13 +52,15 @@ export async function PUT(
 
 export async function DELETE(
   _request: Request,
-{ params }: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params
+    const { id } = params
+
     await prisma.inventory.delete({
       where: { id },
     })
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Database error:', error)
