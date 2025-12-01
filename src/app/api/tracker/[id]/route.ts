@@ -1,13 +1,12 @@
-import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-
+import {prisma} from "@/lib/prisma" // adjust path
 
 export async function GET(
-  // request: Request,
-  context: { params: { id: string } }
+  request: Request,           // first argument must be Request or NextRequest
+  { params }: { params: { id: string } } // second argument contains params
 ) {
   try {
-    const { id } = context.params
+    const { id } = params
 
     const tracker = await prisma.tracker.findUnique({
       where: { id },
@@ -20,12 +19,10 @@ export async function GET(
     return NextResponse.json(tracker)
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch tracker entry" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch tracker entry" }, { status: 500 })
   }
 }
+
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
