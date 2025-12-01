@@ -20,17 +20,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
     const body = await request.json()
+    console.log("[v0] PUT /api/salesmen/[id] - ID:", id, "Body:", body)
+
+    if (!body.name || body.commissionRate === undefined) {
+      return Response.json({ error: "Name and commission rate are required" }, { status: 400 })
+    }
 
     const result = await prisma.salesman.update({
       where: { id },
       data: {
-        name: body.name,
+        name: body.name.trim(),
         commissionRate: Number.parseFloat(body.commissionRate),
       },
     })
+    console.log("[v0] Salesman updated successfully:", result)
     return Response.json(result)
   } catch (error) {
-    console.error("Database error:", error)
+    console.error("[v0] Database error:", error)
     return Response.json({ error: "Failed to update salesman" }, { status: 500 })
   }
 }

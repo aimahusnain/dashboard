@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     const tracker = await prisma.tracker.findUnique({
       where: { id },
     })
@@ -16,9 +16,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
 
     const updatedTracker = await prisma.tracker.update({
@@ -67,9 +67,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
 
     if (id === "delete-all") {
       await prisma.tracker.deleteMany({})

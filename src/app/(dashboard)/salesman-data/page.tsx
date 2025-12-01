@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Loader2, Plus, Trash2, Edit2, Check, X } from "lucide-react"
+import { Loader2, Plus, Trash2, Edit2 } from "lucide-react"
 import useSWR from "swr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ export default function SalesmanDataPage() {
   const [formData, setFormData] = useState({ name: "", commissionRate: "" })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editFormData, setEditFormData] = useState({ name: "", commissionRate: "" })
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   const labels = {
     en: {
@@ -33,6 +34,10 @@ export default function SalesmanDataPage() {
       save: "Save",
       cancel: "Cancel",
       noRecords: "No salesmen yet",
+      confirmDelete: "Are you sure you want to delete this salesman?",
+      fillAllFields: "Please fill in all fields",
+      errorDeleting: "Error deleting salesman",
+      errorUpdating: "Error updating salesman",
     },
     fr: {
       title: "Données des vendeurs",
@@ -46,6 +51,10 @@ export default function SalesmanDataPage() {
       save: "Enregistrer",
       cancel: "Annuler",
       noRecords: "Aucun vendeur pour le moment",
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer ce vendeur?",
+      fillAllFields: "Veuillez remplir tous les champs",
+      errorDeleting: "Erreur lors de la suppression du vendeur",
+      errorUpdating: "Erreur lors de la mise à jour du vendeur",
     },
   }
 
@@ -69,48 +78,64 @@ export default function SalesmanDataPage() {
 
   const handleEditSalesman = async (id: string) => {
     if (!editFormData.name.trim() || !editFormData.commissionRate) {
-      alert("Please fill in all fields")
+      alert(t.fillAllFields)
       return
     }
     try {
       const response = await fetch(`/api/salesmen/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify({
+          name: editFormData.name,
+          commissionRate: editFormData.commissionRate,
+        }),
       })
-      if (!response.ok) throw new Error("Update failed")
+      
+      if (!response.ok) {
+        throw new Error("Update failed")
+      }
+      
       mutate()
       setEditingId(null)
       setEditFormData({ name: "", commissionRate: "" })
+      setEditDialogOpen(false)
     } catch (error) {
       console.error("Error updating salesman:", error)
-      alert("Error updating salesman")
+      alert(t.errorUpdating)
     }
   }
 
   const handleDelete = async (id: string) => {
-    console.log("[v0] Delete initiated for ID:", id)
     if (!id) {
       alert("Error: Invalid ID")
       return
     }
-    if (!window.confirm("Are you sure you want to delete this salesman?")) return
+    
+    if (!window.confirm(t.confirmDelete)) return
+    
     try {
-      const response = await fetch(`/api/salesmen/delete?id=${id}`, { method: "DELETE" })
-      if (!response.ok) throw new Error("Delete failed")
+      const response = await fetch(`/api/salesmen/${id}`, { 
+        method: "DELETE" 
+      })
+      
+      if (!response.ok) {
+        throw new Error("Delete failed")
+      }
+      
       mutate()
     } catch (error) {
       console.error("Error deleting salesman:", error)
-      alert("Error deleting salesman")
+      alert(t.errorDeleting)
     }
   }
 
   const startEdit = (salesman: any) => {
-    setEditingId(salesman._id)
+    setEditingId(salesman.id)
     setEditFormData({
       name: salesman.name,
       commissionRate: salesman.commissionRate.toString(),
     })
+    setEditDialogOpen(true)
   }
 
   return (
@@ -190,74 +215,26 @@ export default function SalesmanDataPage() {
                   </TableHeader>
                   <TableBody>
                     {salesmen.map((salesman: any) => (
-                      <TableRow key={salesman._id || salesman.id}>
-                        <TableCell className="font-medium">
-                          {editingId === salesman._id ? (
-                            <Input
-                              value={editFormData.name}
-                              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                              className="w-full"
-                            />
-                          ) : (
-                            salesman.name
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingId === salesman._id ? (
-                            <Input
-                              type="number"
-                              value={editFormData.commissionRate}
-                              onChange={(e) => setEditFormData({ ...editFormData, commissionRate: e.target.value })}
-                              className="w-full"
-                            />
-                          ) : (
-                            `${salesman.commissionRate}%`
-                          )}
-                        </TableCell>
+                      <TableRow key={salesman.id}>
+                        <TableCell className="font-medium">{salesman.name}</TableCell>
+                        <TableCell>{`${salesman.commissionRate}%`}</TableCell>
                         <TableCell className="flex gap-2">
-                          {editingId === salesman._id ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditSalesman(salesman._id)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              >
-                                <Check size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setEditingId(null)}
-                                className="text-gray-600 hover:text-gray-700"
-                              >
-                                <X size={16} />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => startEdit(salesman)}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <Edit2 size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  const salesmantId = salesman.id || salesman._id
-                                  console.log("[v0] Attempting delete with ID:", salesmantId)
-                                  handleDelete(salesmantId)
-                                }}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
-                            </>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEdit(salesman)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Edit2 size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(salesman.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -268,6 +245,48 @@ export default function SalesmanDataPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.edit}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">{t.name}</label>
+              <Input
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder="e.g., Jimmy"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">{t.rate}</label>
+              <Input
+                type="number"
+                value={editFormData.commissionRate}
+                onChange={(e) => setEditFormData({ ...editFormData, commissionRate: e.target.value })}
+                placeholder="e.g., 25"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (editingId) {
+                    handleEditSalesman(editingId)
+                  }
+                }}
+                className="flex-1"
+              >
+                {t.save}
+              </Button>
+              <Button onClick={() => setEditDialogOpen(false)} variant="outline" className="flex-1">
+                {t.cancel}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

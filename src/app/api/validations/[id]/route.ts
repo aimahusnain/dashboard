@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma"
 
-export async function DELETE(context: any) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params
+    const { id } = await params
 
     await prisma.validation.delete({
       where: { id },
@@ -10,7 +10,7 @@ export async function DELETE(context: any) {
 
     return Response.json({ success: true })
   } catch (error) {
-    console.error('Database error:', error)
-    return Response.json({ error: 'Failed to delete validation' }, { status: 500 })
+    console.error("Database error:", error)
+    return Response.json({ error: "Failed to delete validation" }, { status: 500 })
   }
 }

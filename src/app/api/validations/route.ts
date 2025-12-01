@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         brand: body.brand || null,
         model: body.model || null,
         color: body.color || null,
+        category: body.category || null,
         year: body.year || null,
         details: body.details || null,
       },

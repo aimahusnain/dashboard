@@ -65,12 +65,18 @@ export default function ValidationPage() {
 
   const t = labels[language as keyof typeof labels]
 
+  // Modified to return items with their IDs
   const getItemsByType = (type: string) => {
-    const items = validations
-      .map((v: any) => v[type])
-      .filter(Boolean)
-      .filter((v: any, i: number, a: any[]) => a.indexOf(v) === i)
-    return items
+    const itemsMap = new Map()
+    
+    validations.forEach((v: any) => {
+      const value = v[type]
+      if (value && !itemsMap.has(value)) {
+        itemsMap.set(value, v.id || v._id) // Support both id and _id
+      }
+    })
+    
+    return Array.from(itemsMap.entries()).map(([value, id]) => ({ value, id }))
   }
 
   const handleAddItem = async () => {
@@ -89,35 +95,39 @@ export default function ValidationPage() {
     }
   }
 
-  const handleDeleteItem = async (item: string, type: string) => {
+  // Fixed delete function
+  const handleDeleteItem = async (id: string) => {
     try {
-      const validation = validations.find((v: any) => v[type] === item)
-      if (validation) {
-        await fetch(`/api/validations/${validation._id}`, { method: "DELETE" })
+      const response = await fetch(`/api/validations/${id}`, { 
+        method: "DELETE" 
+      })
+      
+      if (response.ok) {
         mutate()
+      } else {
+        console.error("Failed to delete item")
       }
     } catch (error) {
       console.error("Error deleting item:", error)
     }
   }
 
+  const openDialogForTab = (tab: TabKeys) => {
+    setCurrentTab(tab)
+    setInputValue("")
+    setShowDialog(true)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="px-4 md:px-8 py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="px-4 md:px-8 py-8">
           <div>
             <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t.title}
             </h2>
             <p className="text-muted-foreground mt-2">{t.subtitle}</p>
           </div>
-          <Button
-            onClick={() => setShowDialog(true)}
-            className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-lg whitespace-nowrap"
-          >
-            <Plus size={20} />
-            {t.addBtn}
-          </Button>
         </div>
       </header>
 
@@ -144,11 +154,11 @@ export default function ValidationPage() {
                         key={idx}
                         className="flex items-center justify-between gap-2 bg-muted/50 p-2 rounded-lg hover:bg-muted transition-colors"
                       >
-                        <span className="text-sm font-medium truncate">{item}</span>
+                        <span className="text-sm font-medium truncate">{item.value}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteItem(item, tab)}
+                          onClick={() => handleDeleteItem(item.id)}
                           className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                         >
                           <X size={14} />
@@ -157,6 +167,14 @@ export default function ValidationPage() {
                     ))}
                   </div>
                 )}
+                <Button
+                  onClick={() => openDialogForTab(tab)}
+                  className=" mt-4 gap-2 bg-black text-white w-full  mx-auto hover:opacity-90 transition-all"
+                  size="sm"
+                >
+                  <Plus size={16} />
+                  {t.addBtn}
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -166,27 +184,11 @@ export default function ValidationPage() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t.addNew}</DialogTitle>
+            <DialogTitle>
+              {t.addNew} - {tabLabels[language as keyof typeof tabLabels][currentTab as TabKeys]}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex gap-2 border-b overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setCurrentTab(tab)
-                    setInputValue("")
-                  }}
-                  className={`px-4 py-2 capitalize font-medium text-sm transition-colors whitespace-nowrap ${
-                    currentTab === tab
-                      ? "border-b-2 border-primary text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tabLabels[language as keyof typeof tabLabels][tab as TabKeys]}
-                </button>
-              ))}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="value" className="text-sm font-medium">
                 {tabLabels[language as keyof typeof tabLabels][currentTab as TabKeys]} *
@@ -199,6 +201,7 @@ export default function ValidationPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleAddItem()
+                    setInputValue("")
                   }
                 }}
               />
@@ -207,7 +210,13 @@ export default function ValidationPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddItem} className="bg-gradient-to-r from-primary to-accent">
+              <Button
+                onClick={() => {
+                  handleAddItem()
+                  setInputValue("")
+                }}
+                className="bg-gradient-to-r from-primary to-accent"
+              >
                 {t.add}
               </Button>
             </div>
