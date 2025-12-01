@@ -336,64 +336,77 @@ export default function TrackerPage() {
     }
   }
 
-  const handleDeleteAll = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete ALL tracker entries? This action cannot be undone."
-      )
+const handleDeleteAll = async () => {
+  if (
+    !confirm(
+      "Are you sure you want to delete ALL tracker entries? This action cannot be undone."
     )
-      return
-
-    setIsDeleting(true)
-
-    try {
-      const response = await fetch("/api/tracker", { method: "DELETE" })
-      if (!response.ok) throw new Error((await response.json()).error || "Failed to delete entries")
-
-      mutate()
-      setSelectedRows(new Set())
-      setSelectAll(false)
-      showToast(t.deleteAllSuccess)
-    } catch (error) {
-      console.error("Error deleting all entries:", error)
-      showToast(t.deleteError, "error")
-    } finally {
-      setIsDeleting(false)
-    }
+  ) {
+    return;
   }
 
-  const handleSelectRow = (id: string) => {
-    const newSelected = new Set(selectedRows)
+  setIsDeleting(true);
 
-    newSelected.has(id) ? newSelected.delete(id) : newSelected.add(id)
+  try {
+    const response = await fetch("/api/tracker", { method: "DELETE" });
+    if (!response.ok)
+      throw new Error(
+        (await response.json()).error || "Failed to delete entries"
+      );
 
-    setSelectedRows(newSelected)
-    setSelectAll(newSelected.size === paginatedTracker.length && paginatedTracker.length > 0)
+    mutate(); // refresh your data
+    setSelectedRows(new Set());
+    setSelectAll(false);
+    showToast(t.deleteAllSuccess);
+  } catch (error) {
+    console.error("Error deleting all entries:", error);
+    showToast(t.deleteError, "error");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
+const handleSelectRow = (id: string) => {
+  const newSelected = new Set(selectedRows);
+
+  if (newSelected.has(id)) {
+    newSelected.delete(id);
+  } else {
+    newSelected.add(id);
   }
 
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRows(new Set())
-      setSelectAll(false)
-    } else {
-      setSelectedRows(new Set(paginatedTracker.map((entry: any) => entry.id)))
-      setSelectAll(true)
-    }
+  setSelectedRows(newSelected);
+  setSelectAll(
+    newSelected.size === paginatedTracker.length && paginatedTracker.length > 0
+  );
+};
+
+const handleSelectAll = () => {
+  if (selectAll) {
+    setSelectedRows(new Set());
+    setSelectAll(false);
+  } else {
+    setSelectedRows(new Set(paginatedTracker.map((entry: any) => entry.id)));
+    setSelectAll(true);
   }
+};
 
-  const startEdit = (entry: any) => {
-    setEditingId(entry.id)
+const startEdit = (entry: any) => {
+  setEditingId(entry.id);
 
-    const editData = {
-      ...entry,
-      sellStatus: !!entry.sellStatus,
-      reserve: !!entry.reserve,
-      paid: entry.paid?.toString() || ""
-    }
+  const editData = {
+    ...entry,
+    sellStatus: !!entry.sellStatus,
+    reserve: !!entry.reserve,
+    paid: entry.paid?.toString() || "",
+  };
 
-    setFormData(editData)
-    setShowDialog(true)
-  }
+  setFormData(editData); // assuming you have a formData state
+};
+
+
+
+
 
   const resetForm = () => {
     setFormData({ sellStatus: false, paid: "", reserve: false })
@@ -789,9 +802,12 @@ return (
       </div>
 
       {/* All money fields with comma formatting */}
-      {["purchasePrice", "reconciliation", "esthetique", "transport", "adjustment", "accessCredit", "blackBook", 
-        "displayedPrice", "variableGrossProfit", "costGP", "prGP", "rebate", "vassCost", "cost"].map(field => (
-        <div key={field}>
+    {[
+      "purchasePrice", "reconciliation", "esthetique", "transport", "adjustment",
+      "accessCredit", "blackBook", "displayedPrice", "variableGrossProfit",
+      "costGP", "prGP", "rebate", "vassCost", "cost"
+    ].map((field) => (
+      <div key={field}>
           <label className="text-sm font-medium">{COLUMN_LABELS[field]}</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
