@@ -550,7 +550,11 @@ return (
               <SelectTrigger className="w-32"><SelectValue placeholder={t.allYears} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t.allYears}</SelectItem>
-                {uniqueYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+{uniqueYears.map((year) => (
+  <SelectItem key={String(year)} value={String(year)}>
+    {String(year)}
+  </SelectItem>
+))}
               </SelectContent>
             </Select>
           </div>
@@ -565,7 +569,11 @@ return (
                 <SelectTrigger className="w-32"><SelectValue placeholder={t.allMonths} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.allMonths}</SelectItem>
-                  {uniqueMonths.map(month => <SelectItem key={month} value={month}>{month}</SelectItem>)}
+{uniqueMonths.map((month) => (
+  <SelectItem key={String(month)} value={String(month)}>
+    {String(month)}
+  </SelectItem>
+))}
                 </SelectContent>
               </Select>
             </div>
@@ -609,7 +617,8 @@ return (
               <Table>
                 <TableHeader className="sticky top-0 bg-card z-20">
                   <TableRow className="bg-yellow-50 dark:bg-yellow-950 border-b-2">
-                    <TableHead className="w-12 py-2 px-3 font-bold text-yellow-900 dark:text-yellow-100">{t.totals}</TableHead>
+                    <TableHead className="w-12 py-2 px-3 font-bold text-yellow-900 dark:text-yellow-100">{(t as any).totals}
+</TableHead>
                     {COLUMNS.map(col => (
                       <TableHead key={`total-${col}`} className="whitespace-nowrap py-2 px-3 text-yellow-900 dark:text-yellow-100 font-bold">
                         {TOTALS_COLUMNS.includes(col) ? formatCurrency(totals[col]) : ""}
