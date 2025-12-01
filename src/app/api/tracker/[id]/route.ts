@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import {prisma} from "@/lib/prisma"; // adjust path
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(req: NextRequest, context: any) {
+  // let Next.js infer params
+  const { id } = context.params; 
 
   try {
     const tracker = await prisma.tracker.findUnique({
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Failed to fetch tracker entry" }, { status: 500 });
   }
 }
+
 
 
 
