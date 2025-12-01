@@ -1,18 +1,29 @@
 import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+
+export async function GET(
+  // request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const { id } = params
+    const { id } = context.params
+
     const tracker = await prisma.tracker.findUnique({
       where: { id },
     })
+
     if (!tracker) {
-      return Response.json({ error: "Tracker entry not found" }, { status: 404 })
+      return NextResponse.json({ error: "Tracker entry not found" }, { status: 404 })
     }
-    return Response.json(tracker)
+
+    return NextResponse.json(tracker)
   } catch (error) {
     console.error("Database error:", error)
-    return Response.json({ error: "Failed to fetch tracker entry" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch tracker entry" },
+      { status: 500 }
+    )
   }
 }
 
