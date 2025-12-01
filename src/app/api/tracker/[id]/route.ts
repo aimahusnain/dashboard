@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import {prisma} from "@/lib/prisma"; // adjust path
+import { prisma } from "@/lib/prisma"; // adjust path
 
 export async function GET(req: NextRequest, context: any) {
-  // let Next.js infer params
-  const { id } = context.params; 
+  const { id } = context.params;
 
   try {
     const tracker = await prisma.tracker.findUnique({
@@ -21,13 +20,11 @@ export async function GET(req: NextRequest, context: any) {
   }
 }
 
+export async function PUT(req: NextRequest, context: any) {
+  const { id } = context.params;
 
-
-
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
-    const body = await request.json()
+    const body = await req.json();
 
     const updatedTracker = await prisma.tracker.update({
       where: { id },
@@ -67,29 +64,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         salesperson: body.salesperson,
         notes: body.notes,
       },
-    })
-    return Response.json(updatedTracker)
+    });
+
+    return NextResponse.json(updatedTracker);
   } catch (error) {
-    console.error("Database error:", error)
-    return Response.json({ error: "Failed to update tracker entry" }, { status: 500 })
+    console.error("Database error:", error);
+    return NextResponse.json({ error: "Failed to update tracker entry" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const { id } = params
+export async function DELETE(req: NextRequest, context: any) {
+  const { id } = context.params;
 
+  try {
     if (id === "delete-all") {
-      await prisma.tracker.deleteMany({})
-      return Response.json({ success: true, message: "All tracker entries deleted successfully" })
+      await prisma.tracker.deleteMany({});
+      return NextResponse.json({ success: true, message: "All tracker entries deleted successfully" });
     }
 
     await prisma.tracker.delete({
       where: { id },
-    })
-    return Response.json({ success: true })
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Database error:", error)
-    return Response.json({ error: "Failed to delete tracker entry" }, { status: 500 })
+    console.error("Database error:", error);
+    return NextResponse.json({ error: "Failed to delete tracker entry" }, { status: 500 });
   }
 }
